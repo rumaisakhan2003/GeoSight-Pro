@@ -1,13 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <title>GeoSight Pro Atlas | Geotechnical Analysis Dashboard</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        /* DESIGN: "Deep Forest" Organic Dark Mode */
-        body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; display: flex; height: 100vh; background: #052c24; color: #e8f3f1; overflow: hidden; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; background: #052c24; color: #e8f3f1; overflow: hidden; }
         
         #modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(2, 20, 16, 0.95); z-index: 2000; display: flex; align-items: center; justify-content: center; }
         .modal { background: #083d32; color: #e8f3f1; padding: 40px; border-radius: 12px; width: 420px; box-shadow: 0 15px 50px rgba(0,0,0,0.5); border: 1px solid #105e4d; }
@@ -45,120 +43,196 @@
         .cost-total { font-size: 22px; color: #e67e22; font-weight: 700; text-align: right; margin-top: 15px; border-top: 2px dashed #105e4d; padding-top: 15px;}
         .custom-pin { display: flex; justify-content: center; align-items: center; }
 
-        .footer-credit { 
-            padding: 20px 30px; 
-            font-size: 11px; 
-            color: #a8c7c1; 
-            border-top: 1px solid #0a4d3f; 
-            line-height: 1.5; 
-            background: rgba(39, 174, 96, 0.02);
-        }
+        .footer-credit { padding: 20px 30px; font-size: 11px; color: #a8c7c1; border-top: 1px solid #0a4d3f; line-height: 1.5; background: rgba(39, 174, 96, 0.02); }
         .footer-credit a { color: #27ae60; text-decoration: none; font-weight: bold; }
 
-        /* Floating Site Logo */
-        #geosight-logo {
-            position: fixed;
-            bottom: 20px;
-            right: 80px; 
-            z-index: 2500;
-            height: 90px;
-            width: auto;
-            pointer-events: none;
-            filter: drop-shadow(0 2px 10px rgba(0,0,0,0.5));
-        }
+        #geosight-logo { position: fixed; bottom: 20px; right: 80px; z-index: 2500; height: 90px; width: auto; pointer-events: none; filter: drop-shadow(0 2px 10px rgba(0,0,0,0.5)); }
 
-        #export-report-container { position: absolute; left: -9999px; width: 800px; background: #fff; color: #333; padding: 40px; box-sizing: border-box; }
-        .exp-header { border-bottom: 3px solid #0d6b49; padding-bottom: 15px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; }
-        .exp-section { margin-bottom: 20px; border: 1px solid #eee; padding: 15px; border-radius: 8px; }
-        .exp-sec-title { font-weight: bold; color: #0d6b49; font-size: 14px; margin-bottom: 10px; text-transform: uppercase; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        #export-report-container { 
+            position: absolute; left: -9999px; top: 0; 
+            width: 794px; background: #e8f3f1; 
+            display: flex; flex-direction: column; gap: 20px; padding: 20px;
+        }
+        .pdf-page {
+            width: 794px; height: 1123px;
+            background: #fff; color: #333;
+            padding: 50px 60px; box-sizing: border-box;
+            position: relative; overflow: hidden;
+            border: 1px solid #ddd;
+        }
+        .pdf-logo {
+            position: absolute; top: 40px; right: 50px; height: 60px; object-fit: contain; z-index: 10;
+        }
+        .exp-header { border-bottom: 3px solid #0d6b49; padding-bottom: 15px; margin-bottom: 25px; display: flex; align-items: center; justify-content: space-between; }
+        .exp-section { margin-bottom: 20px; border: 1px solid #eee; padding: 18px; border-radius: 8px; }
+        .exp-sec-title { font-weight: 800; color: #0d6b49; font-size: 15px; margin-bottom: 12px; text-transform: uppercase; border-bottom: 2px solid #eee; padding-bottom: 5px; }
         .exp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        #exp-map-img { width: 100%; height: 350px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd; margin-top: 10px; }
-        #exp-diagram-img { width: 100%; height: 200px; object-fit: contain; border: 1px solid #eee; border-radius: 4px; }
-        .exp-data-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dotted #eee; font-size: 12px; }
+        .exp-data-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dotted #eee; font-size: 13px; }
+        
+        .exp-table { width: 100%; border-collapse: collapse; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; }
+        .exp-table th { background: #0d6b49; color: #fff; padding: 10px; font-size: 13px; text-align: left; }
+        .exp-table td { padding: 9px 10px; font-size: 12px; border-bottom: 1px solid #ddd; }
+
+        .drill-card {
+            background: #052c24; border: 1.5px solid #105e4d; border-radius: 7px;
+            padding: 10px 12px; cursor: pointer; transition: border-color 0.18s, background 0.18s; position: relative;
+        }
+        .drill-card:hover { border-color: #27ae60; background: #063a2e; }
+        .drill-card.selected { border-color: #e67e22; background: rgba(230,126,34,0.08); }
+        .drill-card.selected::after {
+            content: "SELECTED"; position: absolute; top: 6px; right: 8px;
+            font-size: 7.5px; font-weight: 700; letter-spacing: 0.8px; color: #e67e22;
+        }
+        .drill-card-name { font-size: 12.5px; font-weight: 700; color: #e8f3f1; margin-bottom: 3px; }
+        .drill-card-rate { font-size: 11px; color: #27ae60; font-weight: 600; margin-bottom: 5px; }
+        .drill-card-desc { font-size: 9.5px; color: #6a8f86; line-height: 1.5; }
+
+        #rock-warning { display: none; margin: 16px 0 0; border: 1.5px solid #e74c3c; border-radius: 8px; overflow: hidden; }
+        .rock-warning-header { background: #e74c3c; color: #fff; padding: 10px 16px; font-size: 12px; font-weight: 700; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
+        .rock-warning-body { background: rgba(231,76,60,0.06); padding: 14px 16px; font-size: 12px; line-height: 1.75; color: #e8f3f1; }
+        .rock-alt-cost { margin-top: 12px; padding: 10px 14px; background: rgba(231,76,60,0.1); border: 1px dashed rgba(231,76,60,0.5); border-radius: 5px; }
+        .rock-alt-cost-title { font-size: 10px; color: #e74c3c; font-weight: 700; letter-spacing: 1px; margin-bottom: 8px; }
+        .rock-alt-row { display: flex; justify-content: space-between; font-size: 11.5px; padding: 3px 0; border-bottom: 1px dotted rgba(231,76,60,0.2); }
+        .rock-alt-row:last-child { border-bottom: none; }
+        .rock-alt-total { margin-top: 8px; font-size: 15px; font-weight: 700; color: #e74c3c; text-align: right; }
+
+        #lab-selector-section { padding: 0 30px 24px; border-bottom: 1px solid #0a4d3f; }
+        .lab-selector-header { font-size: 12px; color: #a8c7c1; margin-bottom: 10px; font-weight: 600; letter-spacing: 0.5px; }
+        #lab-search-input { width: 100%; padding: 9px 12px; background: #052c24; border: 1px solid #105e4d; color: #e8f3f1; outline: none; border-radius: 5px; font-size: 12px; box-sizing: border-box; margin-bottom: 8px; }
+        #lab-search-input:focus { border-color: #27ae60; }
+        #lab-list-container { max-height: 200px; overflow-y: auto; border: 1px solid #105e4d; border-radius: 5px; background: #052c24; }
+        .lab-list-item { padding: 9px 12px; cursor: pointer; border-bottom: 1px solid rgba(16,94,77,0.3); display: flex; justify-content: space-between; align-items: center; transition: background 0.15s; }
+        .lab-list-item:last-child { border-bottom: none; }
+        .lab-list-item:hover { background: rgba(39,174,96,0.08); }
+        .lab-list-item.selected { background: rgba(39,174,96,0.15); border-left: 3px solid #27ae60; }
+        .lab-list-item.nearest-badge::after { content: "NEAREST"; font-size: 8px; color: #27ae60; border: 1px solid #27ae60; padding: 1px 5px; border-radius: 3px; margin-left: 6px; white-space: nowrap; }
+        .lab-item-name { font-size: 11.5px; color: #e8f3f1; font-weight: 500; }
+        .lab-item-dist { font-size: 11px; color: #27ae60; font-weight: 600; white-space: nowrap; margin-left: 8px; }
+        .lab-item-phone { font-size: 10px; color: #555; margin-top: 2px; }
+        .selected-lab-info { margin-top: 10px; padding: 10px 12px; background: rgba(39,174,96,0.05); border: 1px solid rgba(39,174,96,0.25); border-radius: 5px; font-size: 11px; }
+        .selected-lab-info b { color: #27ae60; display: block; margin-bottom: 3px; }
+
+        #rate-card-section { padding: 26px 30px; border-bottom: 1px solid #0a4d3f; }
+        .rate-card-header { color: #27ae60; font-size: 16px; letter-spacing: 1px; font-weight: 600; border-bottom: 2px solid #27ae60; padding-bottom: 8px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
+        .rate-card-header span { font-size: 10px; color: #a8c7c1; font-weight: 400; letter-spacing: 0; }
+        .rate-card-hint { font-size: 11px; color: #a8c7c1; margin-bottom: 16px; }
+        .rate-group-title { font-size: 10px; letter-spacing: 1.5px; color: #27ae60; text-transform: uppercase; margin: 16px 0 8px; opacity: 0.7; }
+        .rate-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid rgba(16, 94, 77, 0.4); }
+        .rate-row:last-child { border-bottom: none; }
+        .rate-label { font-size: 12.5px; color: #a8c7c1; flex: 1; }
+        .rate-unit { font-size: 10px; color: #555; margin-right: 10px; }
+
+        .rate-value-wrap { display: flex; align-items: center; gap: 6px; background: #052c24; border: 1px solid #105e4d; border-radius: 5px; padding: 5px 10px; min-width: 120px; cursor: pointer; transition: border-color 0.2s, background 0.2s; position: relative; }
+        .rate-value-wrap:hover { border-color: #27ae60; background: #063a2e; }
+        .rate-value-wrap.editing { border-color: #e67e22; background: #063a2e; }
+
+        .rate-prefix { font-size: 10px; color: #27ae60; font-weight: 600; flex-shrink: 0; }
+        .rate-display { font-size: 13px; color: #fff; font-weight: 600; flex: 1; text-align: right; min-width: 60px; }
+        .rate-input { font-size: 13px; color: #fff; font-weight: 600; background: transparent; border: none; outline: none; width: 80px; text-align: right; display: none; font-family: 'Segoe UI', sans-serif; }
+        .rate-edit-icon { font-size: 10px; color: #27ae60; flex-shrink: 0; opacity: 0.6; }
+        .rate-value-wrap:hover .rate-edit-icon { opacity: 1; }
+
+        .rate-reset-btn { width: 100%; margin-top: 14px; padding: 9px; background: transparent; color: #a8c7c1; border: 1px dashed #105e4d; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; transition: 0.2s; }
+        .rate-reset-btn:hover { border-color: #e67e22; color: #e67e22; }
+
+        .info-btn-bar { display: flex; gap: 10px; padding: 14px 20px 10px; border-bottom: 1px solid #0a4d3f; }
+        .info-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; background: #052c24; border: 1.5px solid #105e4d; border-radius: 8px; padding: 12px 6px; cursor: pointer; transition: border-color 0.18s, background 0.18s, transform 0.15s; position: relative; }
+        .info-btn:hover { border-color: #27ae60; background: #063a2e; transform: translateY(-1px); }
+        .info-btn svg { display: block; }
+        .info-btn-tooltip { position: absolute; bottom: calc(100% + 7px); left: 50%; transform: translateX(-50%); background: #000; color: #fff; font-size: 10px; font-weight: 600; white-space: nowrap; padding: 4px 9px; border-radius: 4px; pointer-events: none; opacity: 0; transition: opacity 0.15s; letter-spacing: 0.5px; }
+        .info-btn:hover .info-btn-tooltip { opacity: 1; }
+
+        .info-panel-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(2, 20, 16, 0.88); z-index: 3000; display: none; align-items: center; justify-content: center; }
+        .info-panel-overlay.open { display: flex; }
+        .info-panel-box { background: #083d32; border: 1px solid #105e4d; border-radius: 12px; width: 500px; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.5); position: relative; overflow: hidden; }
+        .info-panel-header { display: flex; justify-content: space-between; align-items: center; padding: 18px 22px; border-bottom: 1px solid #0a4d3f; background: rgba(39,174,96,0.05); }
+        .info-panel-title { color: #27ae60; font-size: 15px; font-weight: 700; letter-spacing: 1px; }
+        .info-panel-close { background: transparent; border: 1px solid #105e4d; color: #a8c7c1; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: 0.2s; line-height: 1; }
+        .info-panel-close:hover { border-color: #e67e22; color: #e67e22; }
+        .info-panel-body { overflow-y: auto; padding: 20px 22px; flex: 1; }
+
+        .rate-changed { color: #e67e22 !important; }
+        .rate-badge { display: inline-block; font-size: 8px; padding: 2px 5px; background: rgba(230,126,34,0.15); color: #e67e22; border: 1px solid rgba(230,126,34,0.3); border-radius: 3px; margin-left: 6px; vertical-align: middle; display: none; }
     </style>
 </head>
 <body>
 
+<div id="top-header" style="background: #000000; height: 50px; min-height: 50px; display: flex; justify-content: space-between; align-items: center; padding: 0 25px; z-index: 4000; border-bottom: 1px solid #105e4d;">
+    <div style="font-size: 20px; font-weight: 700; color: #ffffff; letter-spacing: 1px;">
+        GeoSight<sup style="font-size: 11px; color: #27ae60; margin-left: 3px; font-weight: 800; text-transform: uppercase;">pro</sup>
+    </div>
+    <button class="menu-btn" style="border-color: #27ae60; padding: 8px 16px; font-size: 11px;" onclick="resetForNewEstimate()">NEW ESTIMATE</button>
+</div>
+
+<div style="display: flex; flex-grow: 1; overflow: hidden; position: relative; width: 100%;">
+
 <img id="geosight-logo" src="d1d55df5-d117-4a76-a796-3f8ae1490674_removalai_preview.png" alt="GeoSight Pro Logo">
 
-<div id="export-report-container">
-    <div class="exp-header">
-        <div style="display:flex; align-items:center; gap:15px;">
-            <img src="https://nust.edu.pk/wp-content/uploads/2020/03/NUST-Logo.png" height="70" crossorigin="anonymous">
-            <div style="line-height:1.2">
-                <div style="font-size:18px; font-weight:bold; color:#0d6b49">GEOTECHNICAL INVESTIGATION REPORT</div>
-                <div style="font-size:12px; color:#666">NUST Institute of Civil Engineering (NICE)</div>
-            </div>
-        </div>
-        <div id="exp-date" style="font-size:11px; color:#999"></div>
-    </div>
-    <div class="exp-grid">
-        <div class="exp-section">
-            <div class="exp-sec-title">Site Information</div>
-            <div class="exp-data-row"><span>Project Name:</span> <b id="exp-name"></b></div>
-            <div class="exp-data-row"><span>Coordinates:</span> <b id="exp-coords"></b></div>
-            <div class="exp-data-row"><span>Dimensions:</span> <b id="exp-dims"></b></div>
-        </div>
-        <div class="exp-section">
-            <div class="exp-sec-title">Technical Specs</div>
-            <div class="exp-data-row"><span>Borehole Count:</span> <b id="exp-count"></b></div>
-            <div class="exp-data-row"><span>Depth per Bore:</span> <b id="exp-depth"></b></div>
-            <div class="exp-data-row"><span>Estimated SPT (N):</span> <b id="exp-spt"></b></div>
-        </div>
-    </div>
-    <div class="exp-grid">
-        <div class="exp-section">
-            <div class="exp-sec-title">Soil Profile & Program</div>
-            <div id="exp-profile" style="font-weight:bold; margin-bottom:5px;"></div>
-            <div id="exp-tests" style="font-size:11px; color:#555;"></div>
-        </div>
-        <div class="exp-section">
-            <div class="exp-sec-title">Borehole Layout Plan</div>
-            <img id="exp-diagram-img">
-        </div>
-    </div>
-    <div class="exp-section" style="background:#f9f9f9">
-        <div class="exp-sec-title">Cost Estimation (PKR)</div>
-        <div id="exp-costs"></div>
-        <div id="exp-total" style="font-size:18px; font-weight:bold; text-align:right; color:#e67e22; margin-top:10px; border-top:1px solid #ccc; padding-top:5px;"></div>
-    </div>
-    <div style="font-weight:bold; font-size:12px; color:#0d6b49; margin-bottom:5px;">SITE LOCATION & LOGISTICS:</div>
-    <img id="exp-map-img">
-</div>
+<div id="export-report-container"></div>
 
 <div id="modal-overlay">
     <div class="modal" id="modal-params">
         <h2>SITE PARAMETERS</h2>
-        <label style="font-size:11px; color: #a8c7c1;">SITE NAME</label>
-        <input type="text" id="input-name" placeholder="">
-        
-        <div style="display:flex; gap:10px;">
-            <div style="flex:1">
-                <label style="font-size:11px; color: #a8c7c1;">LENGTH (m)</label>
-                <input type="number" id="input-len" value="60">
+        <label style="font-size:11px; color: #a8c7c1; display:block; margin-bottom:8px;">BUILDING TYPE</label>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
+            <div class="drill-card" id="bt-residential" onclick="selectBuildingType('Residential')" style="text-align:center; padding:14px 8px;">
+                <div class="drill-card-name" style="font-size:14px; margin-bottom:5px;">&#127968; Residential</div>
+                <div class="drill-card-desc">Houses, apartments &amp; low-rise buildings</div>
             </div>
-            <div style="flex:1">
-                <label style="font-size:11px; color: #a8c7c1;">WIDTH (m)</label>
-                <input type="number" id="input-wid" value="30">
+            <div class="drill-card" id="bt-commercial" onclick="selectBuildingType('Commercial')" style="text-align:center; padding:14px 8px;">
+                <div class="drill-card-name" style="font-size:14px; margin-bottom:5px;">&#127970; Commercial</div>
+                <div class="drill-card-desc">Offices, malls &amp; commercial towers</div>
             </div>
         </div>
-
+        <input type="hidden" id="input-building-type" value="">
+        <div id="bt-note" style="font-size:10px; color:#a8c7c1; margin-bottom:12px; min-height:14px; padding:6px 10px; background:rgba(39,174,96,0.06); border:1px solid rgba(39,174,96,0.2); border-radius:5px; display:none;"></div>
+        <label style="font-size:11px; color: #a8c7c1;">SITE NAME</label>
+        <input type="text" id="input-name" placeholder="">
+        <div style="display:flex; gap:10px;">
+            <div style="flex:1">
+                <label style="font-size:11px; color: #a8c7c1;">LENGTH (ft)</label>
+                <input type="number" id="input-len" value="200">
+            </div>
+            <div style="flex:1">
+                <label style="font-size:11px; color: #a8c7c1;">WIDTH (ft)</label>
+                <input type="number" id="input-wid" value="100">
+            </div>
+        </div>
         <label style="font-size:11px; color: #a8c7c1;">STORIES</label>
         <input type="number" id="input-stories" value="10">
+        <label style="font-size:11px; color: #a8c7c1; display:block; margin-top:12px; margin-bottom:8px;">TYPE OF DRILLING</label>
+        <div id="drill-type-cards" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:4px;">
 
-        <label style="font-size:11px; color: #a8c7c1;">TYPE OF DRILLING</label>
-        <select id="input-drill-type">
-            <option value="Rotary">Rotary</option>
-            <option value="Auger">Auger</option>
-            <option value="Percussion">Percussion</option>
-        </select>
+            <div class="drill-card" id="dc-rotary" onclick="selectDrillType('Rotary')"
+                 title="Rotary Drilling: Uses a rotating drill bit with drilling fluid or casing. Best for deep boreholes in non-gravelly, fine to medium grained soils such as silts and clays. Standard for commercial and high-rise projects. Highest quality undisturbed samples. SPT charged separately at PKR 200/ft every 3ft. Rate: PKR 1,500/ft.">
+                <div class="drill-card-name">Rotary</div>
+                <div class="drill-card-rate">PKR 1,500/ft</div>
+                <div class="drill-card-desc">Non-gravelly soils &middot; Commercial / high-rise &middot; Best sample quality</div>
+            </div>
 
-        <button onclick="showLocationOptions()">CONTINUE</button>
+            <div class="drill-card" id="dc-lightperc" onclick="selectDrillType('Light Percussion')"
+                 title="Light Percussion (Shell &amp; Auger): Drops a lightweight shell or auger tool into the ground by percussion. Best suited for gravelly and cobbly soils where rotary bits struggle. Most economical method. SPT charged separately at PKR 200/ft every 3ft. Rate: PKR 600/ft.">
+                <div class="drill-card-name">Light Percussion</div>
+                <div class="drill-card-rate">PKR 600/ft</div>
+                <div class="drill-card-desc">Gravelly soils &middot; Most economical &middot; SPT charged separately</div>
+            </div>
+
+            <div class="drill-card" id="dc-heavyperc" onclick="selectDrillType('Heavy Percussion')"
+                 title="Heavy Percussion (Cable Tool): Uses a heavy chisel or bit dropped repeatedly to break and remove material. Effective in stiff clays, dense gravels, and cobbles. More capable than light percussion for deeper holes. SPT charged separately at PKR 200/ft every 3ft. Rate: PKR 1,000/ft.">
+                <div class="drill-card-name">Heavy Percussion</div>
+                <div class="drill-card-rate">PKR 1,000/ft</div>
+                <div class="drill-card-desc">Stiff clays &amp; dense gravels &middot; Medium depth &middot; SPT charged separately</div>
+            </div>
+
+        </div>
+        <input type="hidden" id="input-drill-type" value="Rotary">
+        <div id="drill-selected-label" style="font-size:10px; color:#27ae60; margin-bottom:4px; min-height:14px;">Selected: Rotary</div>
+        <button onclick="showLocationOptions()">CONTINUE &#8594;</button>
     </div>
     <div class="modal" id="modal-location" style="display:none;">
         <h2>SITE LOCATION</h2>
         <button onclick="startMapSelection()">CLICK ON MAP</button>
-        <div style="margin:20px 0; text-align:center; font-size:11px; color:#27ae60; font-weight: 600;">— OR —</div>
+        <div style="margin:20px 0; text-align:center; font-size:11px; color:#27ae60; font-weight: 600;">-- OR --</div>
         <input type="number" id="manual-lat" step="0.0001" placeholder="Latitude">
         <input type="number" id="manual-lng" step="0.0001" placeholder="Longitude">
         <button class="secondary-btn" onclick="submitManualCoords()">USE COORDINATES</button>
@@ -166,10 +240,291 @@
 </div>
 
 <div id="side-panel">
-    <div class="report-section" style="background: rgba(39, 174, 96, 0.05)">
+    <div class="report-section" style="background: rgba(39, 174, 96, 0.05); padding-bottom: 16px;">
         <div id="rep-site-title" style="font-size:22px; color:#27ae60; font-weight:700; text-transform:uppercase;">GEOSIGHT ANALYTICS</div>
         <div style="font-size:10px; color:#a8c7c1; font-weight: 600; margin-top: 3px; letter-spacing: 1px;">SOIL INVESTIGATION PROGRAM</div>
     </div>
+
+    <div class="info-btn-bar">
+        <button class="info-btn" onclick="openInfoPanel('rate-card-panel')" title="Rate Card">
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="14" cy="14" r="13" stroke="#27ae60" stroke-width="1.5"/>
+                <text x="14" y="19.5" text-anchor="middle" font-size="14" font-weight="700" fill="#27ae60" font-family="Segoe UI,sans-serif">₨</text>
+            </svg>
+            <span class="info-btn-tooltip">RATE CARD</span>
+        </button>
+        <button class="info-btn" onclick="openInfoPanel('lab-panel')" title="Soil Lab Location">
+            <svg width="30" height="22" viewBox="0 0 30 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="1" y="4" width="18" height="12" rx="1.5" stroke="#27ae60" stroke-width="1.5"/>
+                <path d="M19 8h4.5l4 5v3H19V8z" stroke="#27ae60" stroke-width="1.5" stroke-linejoin="round"/>
+                <circle cx="6.5" cy="17.5" r="2.5" stroke="#27ae60" stroke-width="1.5"/>
+                <circle cx="23.5" cy="17.5" r="2.5" stroke="#27ae60" stroke-width="1.5"/>
+            </svg>
+            <span class="info-btn-tooltip">SOIL LAB LOCATION</span>
+        </button>
+        <button class="info-btn" onclick="openInfoPanel('sample-panel')" title="Soil Sample Summary">
+            <svg width="28" height="24" viewBox="0 0 28 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M2 5a2 2 0 012-2h7l2 3h11a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V5z" stroke="#27ae60" stroke-width="1.5" stroke-linejoin="round"/>
+                <line x1="7" y1="13" x2="21" y2="13" stroke="#27ae60" stroke-width="1.2" stroke-linecap="round"/>
+                <line x1="7" y1="16.5" x2="17" y2="16.5" stroke="#27ae60" stroke-width="1.2" stroke-linecap="round"/>
+            </svg>
+            <span class="info-btn-tooltip">SAMPLE SUMMARY</span>
+        </button>
+    </div>
+
+    <div class="info-panel-overlay" id="rate-card-panel">
+        <div class="info-panel-box" style="width:560px;">
+            <div class="info-panel-header">
+                <span class="info-panel-title">05. RATE CARD</span>
+                <button class="info-panel-close" onclick="closeInfoPanel('rate-card-panel')">&#x2715;</button>
+            </div>
+            <div class="info-panel-body">
+                <div id="rate-card-section">
+        <div class="rate-card-header">
+            05. RATE CARD
+            <span>Click any value to edit</span>
+        </div>
+        <div class="rate-card-hint">
+            Default market rates for ISB/RWP. Drill rate auto-updates with drilling type selection. All values are editable.
+        </div>
+
+        <div class="rate-group-title">&#9935; Drilling</div>
+
+        <div class="rate-row">
+            <span class="rate-label">Drilling cost<span id="badge-drill" class="rate-badge">EDITED</span></span>
+            <span class="rate-unit">per ft</span>
+            <div class="rate-value-wrap" onclick="startEdit('drill')">
+                <span class="rate-prefix">PKR</span>
+                <span class="rate-display" id="disp-drill">1,500</span>
+                <input class="rate-input" id="inp-drill" type="number" value="1500" onblur="endEdit('drill')" onkeydown="if(event.key==='Enter')endEdit('drill')">
+                <span class="rate-edit-icon">&#9998;</span>
+            </div>
+        </div>
+
+        <div class="rate-row">
+            <span class="rate-label">SPT testing <span style="font-size:9px;color:#555">(every 3ft, all drill types)</span><span id="badge-spt" class="rate-badge">EDITED</span></span>
+            <span class="rate-unit">per ft</span>
+            <div class="rate-value-wrap" onclick="startEdit('spt')">
+                <span class="rate-prefix">PKR</span>
+                <span class="rate-display" id="disp-spt">200</span>
+                <input class="rate-input" id="inp-spt" type="number" value="200" onblur="endEdit('spt')" onkeydown="if(event.key==='Enter')endEdit('spt')">
+                <span class="rate-edit-icon">&#9998;</span>
+            </div>
+        </div>
+
+        <div class="rate-group-title">&#128490; Laboratory Testing</div>
+
+        <div class="rate-row">
+            <span class="rate-label">Moisture content<span id="badge-moisture" class="rate-badge">EDITED</span></span>
+            <span class="rate-unit">per sample</span>
+            <div class="rate-value-wrap" onclick="startEdit('moisture')">
+                <span class="rate-prefix">PKR</span>
+                <span class="rate-display" id="disp-moisture">1,000</span>
+                <input class="rate-input" id="inp-moisture" type="number" value="1000" onblur="endEdit('moisture')" onkeydown="if(event.key==='Enter')endEdit('moisture')">
+                <span class="rate-edit-icon">&#9998;</span>
+            </div>
+        </div>
+
+        <div class="rate-row">
+            <span class="rate-label">Sieve analysis<span id="badge-sieve" class="rate-badge">EDITED</span></span>
+            <span class="rate-unit">per sample</span>
+            <div class="rate-value-wrap" onclick="startEdit('sieve')">
+                <span class="rate-prefix">PKR</span>
+                <span class="rate-display" id="disp-sieve">2,500</span>
+                <input class="rate-input" id="inp-sieve" type="number" value="2500" onblur="endEdit('sieve')" onkeydown="if(event.key==='Enter')endEdit('sieve')">
+                <span class="rate-edit-icon">&#9998;</span>
+            </div>
+        </div>
+
+        <div class="rate-row">
+            <span class="rate-label">Hydrometer analysis <span style="font-size:9px;color:#555">(fines &gt; 10%)</span><span id="badge-hydro" class="rate-badge">EDITED</span></span>
+            <span class="rate-unit">per sample</span>
+            <div class="rate-value-wrap" onclick="startEdit('hydro')">
+                <span class="rate-prefix">PKR</span>
+                <span class="rate-display" id="disp-hydro">5,000</span>
+                <input class="rate-input" id="inp-hydro" type="number" value="5000" onblur="endEdit('hydro')" onkeydown="if(event.key==='Enter')endEdit('hydro')">
+                <span class="rate-edit-icon">&#9998;</span>
+            </div>
+        </div>
+
+        <div class="rate-row">
+            <span class="rate-label">Atterberg limits (LL, PL)<span id="badge-atterberg" class="rate-badge">EDITED</span></span>
+            <span class="rate-unit">per sample</span>
+            <div class="rate-value-wrap" onclick="startEdit('atterberg')">
+                <span class="rate-prefix">PKR</span>
+                <span class="rate-display" id="disp-atterberg">2,500</span>
+                <input class="rate-input" id="inp-atterberg" type="number" value="2500" onblur="endEdit('atterberg')" onkeydown="if(event.key==='Enter')endEdit('atterberg')">
+                <span class="rate-edit-icon">&#9998;</span>
+            </div>
+        </div>
+
+        <div class="rate-row">
+            <span class="rate-label">Specific gravity<span id="badge-specgrav" class="rate-badge">EDITED</span></span>
+            <span class="rate-unit">per sample</span>
+            <div class="rate-value-wrap" onclick="startEdit('specgrav')">
+                <span class="rate-prefix">PKR</span>
+                <span class="rate-display" id="disp-specgrav">2,000</span>
+                <input class="rate-input" id="inp-specgrav" type="number" value="2000" onblur="endEdit('specgrav')" onkeydown="if(event.key==='Enter')endEdit('specgrav')">
+                <span class="rate-edit-icon">&#9998;</span>
+            </div>
+        </div>
+
+        <div class="rate-row">
+            <span class="rate-label">Compaction (Proctor) test<span id="badge-proctor" class="rate-badge">EDITED</span></span>
+            <span class="rate-unit">per sample</span>
+            <div class="rate-value-wrap" onclick="startEdit('proctor')">
+                <span class="rate-prefix">PKR</span>
+                <span class="rate-display" id="disp-proctor">4,500</span>
+                <input class="rate-input" id="inp-proctor" type="number" value="4500" onblur="endEdit('proctor')" onkeydown="if(event.key==='Enter')endEdit('proctor')">
+                <span class="rate-edit-icon">&#9998;</span>
+            </div>
+        </div>
+
+        <div class="rate-row">
+            <span class="rate-label">UCS &ndash; Soil<span id="badge-ucs_soil" class="rate-badge">EDITED</span></span>
+            <span class="rate-unit">per sample</span>
+            <div class="rate-value-wrap" onclick="startEdit('ucs_soil')">
+                <span class="rate-prefix">PKR</span>
+                <span class="rate-display" id="disp-ucs_soil">4,000</span>
+                <input class="rate-input" id="inp-ucs_soil" type="number" value="4000" onblur="endEdit('ucs_soil')" onkeydown="if(event.key==='Enter')endEdit('ucs_soil')">
+                <span class="rate-edit-icon">&#9998;</span>
+            </div>
+        </div>
+
+        <div class="rate-row">
+            <span class="rate-label">UCS &ndash; Rock<span id="badge-ucs_rock" class="rate-badge">EDITED</span></span>
+            <span class="rate-unit">per sample</span>
+            <div class="rate-value-wrap" onclick="startEdit('ucs_rock')">
+                <span class="rate-prefix">PKR</span>
+                <span class="rate-display" id="disp-ucs_rock">5,000</span>
+                <input class="rate-input" id="inp-ucs_rock" type="number" value="5000" onblur="endEdit('ucs_rock')" onkeydown="if(event.key==='Enter')endEdit('ucs_rock')">
+                <span class="rate-edit-icon">&#9998;</span>
+            </div>
+        </div>
+
+        <div class="rate-row">
+            <span class="rate-label">Direct shear test<span id="badge-directshear" class="rate-badge">EDITED</span></span>
+            <span class="rate-unit">per sample</span>
+            <div class="rate-value-wrap" onclick="startEdit('directshear')">
+                <span class="rate-prefix">PKR</span>
+                <span class="rate-display" id="disp-directshear">5,500</span>
+                <input class="rate-input" id="inp-directshear" type="number" value="5500" onblur="endEdit('directshear')" onkeydown="if(event.key==='Enter')endEdit('directshear')">
+                <span class="rate-edit-icon">&#9998;</span>
+            </div>
+        </div>
+
+        <div class="rate-row">
+            <span class="rate-label">Consolidation (Oedometer)<span id="badge-consol" class="rate-badge">EDITED</span></span>
+            <span class="rate-unit">per sample</span>
+            <div class="rate-value-wrap" onclick="startEdit('consol')">
+                <span class="rate-prefix">PKR</span>
+                <span class="rate-display" id="disp-consol">10,000</span>
+                <input class="rate-input" id="inp-consol" type="number" value="10000" onblur="endEdit('consol')" onkeydown="if(event.key==='Enter')endEdit('consol')">
+                <span class="rate-edit-icon">&#9998;</span>
+            </div>
+        </div>
+
+
+        <div class="rate-group-title">&#9879; Chemical Tests <span style="font-size:9px;color:#555">(once per project &mdash; only if bore depth &gt; 50ft)</span></div>
+
+        <div class="rate-row">
+            <span class="rate-label">Sulphate test<span id="badge-sulphate" class="rate-badge">EDITED</span></span>
+            <span class="rate-unit">per sample</span>
+            <div class="rate-value-wrap" onclick="startEdit('sulphate')">
+                <span class="rate-prefix">PKR</span>
+                <span class="rate-display" id="disp-sulphate">600</span>
+                <input class="rate-input" id="inp-sulphate" type="number" value="600" onblur="endEdit('sulphate')" onkeydown="if(event.key==='Enter')endEdit('sulphate')">
+                <span class="rate-edit-icon">&#9998;</span>
+            </div>
+        </div>
+
+        <div class="rate-row">
+            <span class="rate-label">Chloride test<span id="badge-chloride" class="rate-badge">EDITED</span></span>
+            <span class="rate-unit">per sample</span>
+            <div class="rate-value-wrap" onclick="startEdit('chloride')">
+                <span class="rate-prefix">PKR</span>
+                <span class="rate-display" id="disp-chloride">600</span>
+                <input class="rate-input" id="inp-chloride" type="number" value="600" onblur="endEdit('chloride')" onkeydown="if(event.key==='Enter')endEdit('chloride')">
+                <span class="rate-edit-icon">&#9998;</span>
+            </div>
+        </div>
+
+        <div style="margin-top:10px; padding:10px 12px; background:rgba(230,126,34,0.08); border:1px solid rgba(230,126,34,0.3); border-radius:5px; font-size:10px; color:#e67e22; line-height:1.6;">
+            <b>NOTE:</b> Cost estimate excludes Triaxial (PKR 20,000/sample) and Bender Element (PKR 10,000/sample).
+            If these tests are required for your project, add them separately to the total.
+        </div>
+
+        <div class="rate-group-title">&#128666; Mobilization &amp; Report</div>
+
+        <div class="rate-row">
+            <span class="rate-label">Mobilization &le; 20 km<span id="badge-mob20" class="rate-badge">EDITED</span></span>
+            <span class="rate-unit">fixed</span>
+            <div class="rate-value-wrap" onclick="startEdit('mob20')">
+                <span class="rate-prefix">PKR</span>
+                <span class="rate-display" id="disp-mob20">20,000</span>
+                <input class="rate-input" id="inp-mob20" type="number" value="20000" onblur="endEdit('mob20')" onkeydown="if(event.key==='Enter')endEdit('mob20')">
+                <span class="rate-edit-icon">&#9998;</span>
+            </div>
+        </div>
+
+        <div class="rate-row">
+            <span class="rate-label">Mobilization &gt; 20 km<span id="badge-mob30" class="rate-badge">EDITED</span></span>
+            <span class="rate-unit">fixed</span>
+            <div class="rate-value-wrap" onclick="startEdit('mob30')">
+                <span class="rate-prefix">PKR</span>
+                <span class="rate-display" id="disp-mob30">30,000</span>
+                <input class="rate-input" id="inp-mob30" type="number" value="30000" onblur="endEdit('mob30')" onkeydown="if(event.key==='Enter')endEdit('mob30')">
+                <span class="rate-edit-icon">&#9998;</span>
+            </div>
+        </div>
+
+        <div class="rate-row">
+            <span class="rate-label">Geotechnical report<span id="badge-report" class="rate-badge">EDITED</span></span>
+            <span class="rate-unit">fixed</span>
+            <div class="rate-value-wrap" onclick="startEdit('report')">
+                <span class="rate-prefix">PKR</span>
+                <span class="rate-display" id="disp-report">30,000</span>
+                <input class="rate-input" id="inp-report" type="number" value="30000" onblur="endEdit('report')" onkeydown="if(event.key==='Enter')endEdit('report')">
+                <span class="rate-edit-icon">&#9998;</span>
+            </div>
+        </div>
+
+        <button class="rate-reset-btn" onclick="resetRates()">&#8634; RESTORE DEFAULT RATES</button>
+    </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="info-panel-overlay" id="lab-panel">
+        <div class="info-panel-box" style="width:500px;">
+            <div class="info-panel-header">
+                <span class="info-panel-title">&#128300; SOIL LAB LOCATION</span>
+                <button class="info-panel-close" onclick="closeInfoPanel('lab-panel')">&#x2715;</button>
+            </div>
+            <div class="info-panel-body">
+                <div id="lab-selector-section-panel">
+                    <div class="lab-selector-header" style="font-size:12px; color:#a8c7c1; margin-bottom:10px; font-weight:600; letter-spacing:0.5px;">Select a soil testing laboratory near your site.</div>
+                    <input type="text" id="lab-search-input" placeholder="Search lab by name..." oninput="filterLabList(this.value)" style="width:100%; padding:9px 12px; background:#052c24; border:1px solid #105e4d; color:#e8f3f1; outline:none; border-radius:5px; font-size:12px; box-sizing:border-box; margin-bottom:8px;">
+                    <div id="lab-list-container" style="max-height:260px; overflow-y:auto; border:1px solid #105e4d; border-radius:5px; background:#052c24;"></div>
+                    <div class="selected-lab-info" id="selected-lab-info" style="margin-top:10px; padding:10px 12px; background:rgba(39,174,96,0.05); border:1px solid rgba(39,174,96,0.25); border-radius:5px; font-size:11px;"></div>
+                    <div style="margin-top:12px; font-size:10px; color:#555; line-height:1.6;">Lab distance is used to calculate mobilization and routing costs in the report. Changes take effect immediately.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="info-panel-overlay" id="sample-panel">
+        <div class="info-panel-box" style="width:500px;">
+            <div class="info-panel-header">
+                <span class="info-panel-title">04. SAMPLE COUNT SUMMARY</span>
+                <button class="info-panel-close" onclick="closeInfoPanel('sample-panel')">&#x2715;</button>
+            </div>
+            <div class="info-panel-body">
+                <div id="sample-summary-content" style="font-size:12px; color:#a8c7c1;">Run a report to see sample counts.</div>
+            </div>
+        </div>
+    </div>
+
     <div id="report-content" style="display:none;">
         <div class="report-section">
             <div class="report-header">01. INVESTIGATION DEPTH</div>
@@ -181,35 +536,34 @@
             <div class="report-header">02. BOREHOLE PLAN</div>
             <div id="rep-plan-dims" style="font-size:11px; color:#a8c7c1; margin-bottom:8px; font-weight: 600;"></div>
             <canvas id="layoutCanvas"></canvas>
+            <div id="rock-warning" style="margin-top:16px;">
+                <div class="rock-warning-header">&#9888; ROCK / SHALE LAYER LIKELY WITHIN BORE DEPTH</div>
+                <div class="rock-warning-body" id="rock-warning-body"></div>
+            </div>
         </div>
         <div class="report-section">
-            <div class="report-header">03. RECOMMENDED TESTS</div>
-            <div class="data-row"><span class="data-label">Interpolated SPT:</span> <span class="data-value" id="rep-spt-val" style="color:#e67e22"></span></div>
-            <div id="rep-test-list" style="font-size: 13px; line-height: 1.8; margin-top:15px; color: #e8f3f1;"></div>
-        </div>
-        <div class="report-section">
-            <div class="report-header">04. COST ESTIMATE (PKR)</div>
+            <div class="report-header">03. COST ESTIMATE (PKR)</div>
             <div class="data-row"><span class="data-label">Drilling:</span> <span class="data-value" id="cost-drill"></span></div>
-            <div class="data-row"><span class="data-label">SPT:</span> <span class="data-value" id="cost-spt"></span></div>
-            <div class="data-row"><span class="data-label">Lab:</span> <span class="data-value" id="cost-lab"></span></div>
+            <div class="data-row"><span class="data-label">SPT (every 3ft):</span> <span class="data-value" id="cost-spt"></span></div>
+            <div class="data-row"><span class="data-label">Lab Tests:</span> <span class="data-value" id="cost-lab"></span></div>
+            <div class="data-row" id="row-chemical" style="display:none"><span class="data-label">Chemical Tests <span style="font-size:9px; color:#888">(1&#215; project)</span>:</span> <span class="data-value" id="cost-chemical" style="color:#e67e22"></span></div>
+            <div class="data-row"><span class="data-label">Report Fee:</span> <span class="data-value" id="cost-report-fee"></span></div>
             <div class="data-row"><span class="data-label">Mobilization:</span> <span class="data-value" id="cost-mob" style="color:#27ae60"></span></div>
             <div class="data-row"><span class="data-label">Lab Route Dist:</span> <span class="data-value" id="rep-route-dist" style="color:#27ae60"></span></div>
             <div class="cost-total" id="cost-grand"></div>
+            <div id="residential-lab-note" style="display:none; margin-top:10px; padding:10px 13px; background:rgba(39,174,96,0.07); border:1px dashed rgba(39,174,96,0.4); border-radius:6px; font-size:11px; color:#a8c7c1; line-height:1.6;">
+                <span style="color:#27ae60; font-weight:700;">Note:</span> For a residential building of &le;3 stories, labs might quote lesser by not performing all extensive lab tests.
+            </div>
             <button onclick="downloadReport()" style="width:100%; padding:14px; background:#16a085; color:#fff; border:none; border-radius:6px; font-weight:bold; cursor:pointer; margin-top:20px;">
-                DOWNLOAD REPORT
+                DOWNLOAD PDF
             </button>
-        </div>
-        <div class="report-section" style="padding: 20px 30px;">
-            <button class="menu-btn" style="width:100%; padding: 12px; font-size: 13px; border-color: #27ae60;" onclick="resetForNewEstimate()">+ NEW ESTIMATE</button>
         </div>
     </div>
     <div style="flex-grow: 1;"></div>
     <div class="footer-credit">
-        <div class="branding-text">
-            <strong style="color: #ffffff;">NUST Institute of Civil Engineering (NICE)</strong><br>
-            <a href="https://nice.nust.edu.pk" target="_blank">nice.nust.edu.pk</a><br>
-            Constituent institute of NUST School of Civil and Environmental Engineering (SCEE).
-        </div>
+        <strong style="color: #ffffff;">NUST Institute of Civil Engineering (NICE)</strong><br>
+        <a href="https://nice.nust.edu.pk" target="_blank">nice.nust.edu.pk</a><br>
+        Constituent institute of NUST School of Civil and Environmental Engineering (SCEE).
     </div>
 </div>
 
@@ -234,7 +588,7 @@
 </div>
 
 <div id="history-drawer">
-    <div class="warning-box">⚠ Refresh clears session history.</div>
+    <div class="warning-box">&#9888; Refresh clears session history.</div>
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
         <h2 style="color:#27ae60; margin:0; font-size: 20px;">HISTORY</h2>
         <button class="menu-btn" onclick="toggleHistory(false)">X</button>
@@ -242,63 +596,639 @@
     <div id="history-list"></div>
 </div>
 
+</div> 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
+    function openInfoPanel(id) {
+        document.getElementById(id).classList.add('open');
+    }
+    function closeInfoPanel(id) {
+        document.getElementById(id).classList.remove('open');
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+        ['rate-card-panel','lab-panel','sample-panel'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) el.addEventListener('click', function(e) {
+                if (e.target === el) closeInfoPanel(id);
+            });
+        });
+    });
     sessionStorage.clear();
-    let siteData = { name: "", len: 0, wid: 0, stories: 0, lat: 0, lng: 0, drillType: "" };
+    let siteData = { name: "", len: 0, wid: 0, stories: 0, lat: 0, lng: 0, drillType: "", gwt: 999, buildingType: "" };
     let isSelecting = false; let isRecalling = false; let currentMarker = null; let routeLayer = null; let nearestLabName = "";
     const funSiteNames = ["Misty Ridge Development", "NUST Sector H-12 Plot B", "Centaurus Extension", "Margalla Soil Survey", "Giga Mall Fix", "Rawalpindi Flyover"];
 
+    const DRILL_RATES = {
+        'Rotary':           1500,
+        'Light Percussion': 600,
+        'Heavy Percussion': 1000
+    };
+    const MOB_RATES = {
+        'Rotary':           { le20: 20000, gt20: 30000 },
+        'Light Percussion': { le20: 10000, gt20: 15000 },
+        'Heavy Percussion': { le20: 20000, gt20: 28000 }
+    };
+
+    const DEFAULT_RATES = {
+        drill:       1500,
+        spt:         200, 
+        moisture:    1000,
+        sieve:       2500,
+        hydro:       5000,
+        atterberg:   2500,
+        specgrav:    2000,
+        ucs_soil:    4000,
+        ucs_rock:    5000,
+        directshear: 5500,
+        consol:      10000,
+        sulphate:    600, 
+        chloride:    600, 
+        mob20:       20000,
+        mob30:       30000,
+        report:      30000
+    };
+    let rates = { ...DEFAULT_RATES };
+
+    function selectDrillType(type) {
+        document.getElementById('input-drill-type').value = type;
+        document.getElementById('drill-selected-label').innerText = 'Selected: ' + type;
+        const map = { 'Rotary':'dc-rotary', 'Light Percussion':'dc-lightperc', 'Heavy Percussion':'dc-heavyperc' };
+        Object.values(map).forEach(id => { const el = document.getElementById(id); if (el) el.classList.remove('selected'); });
+        const sel = document.getElementById(map[type]);
+        if (sel) sel.classList.add('selected');
+        rates.drill = DRILL_RATES[type] || 1500;
+        rates.mob20 = MOB_RATES[type] ? MOB_RATES[type].le20 : 20000;
+        rates.mob30 = MOB_RATES[type] ? MOB_RATES[type].gt20 : 30000;
+        ['drill','mob20','mob30'].forEach(key => {
+            const disp = document.getElementById('disp-' + key);
+            const inp  = document.getElementById('inp-'  + key);
+            if (disp) disp.textContent = rates[key].toLocaleString();
+            if (inp)  inp.value = rates[key];
+            const badge = document.getElementById('badge-' + key);
+            if (badge) badge.style.display = 'none';
+            if (disp)  disp.classList.remove('rate-changed');
+        });
+        if (document.getElementById('report-content').style.display !== 'none') recalcCosts();
+    }
+    selectDrillType('Rotary');
+
+    function selectBuildingType(type) {
+        document.getElementById('input-building-type').value = type;
+        const ids = { 'Residential': 'bt-residential', 'Commercial': 'bt-commercial' };
+        Object.values(ids).forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.classList.remove('selected');
+        });
+        const sel = document.getElementById(ids[type]);
+        if (sel) sel.classList.add('selected');
+
+        const noteEl = document.getElementById('bt-note');
+        if (type === 'Residential') {
+            noteEl.style.display = 'block';
+            const stories = parseInt(document.getElementById('input-stories').value) || 0;
+            if (stories > 0 && stories <= 3) {
+                noteEl.innerHTML = '&#10003; Residential &le;3 stories &mdash; standard residential rate applies';
+            } else {
+                noteEl.innerHTML = '&#128161; If &le;3 stories, standard residential rate applies';
+            }
+        } else {
+            noteEl.style.display = 'none';
+        }
+    }
+
+    document.getElementById('input-stories').addEventListener('input', function() {
+        if (document.getElementById('input-building-type').value === 'Residential') {
+            selectBuildingType('Residential');
+        }
+    });
+
+    function getReportFee() {
+        if (siteData.buildingType === 'Residential' && siteData.stories <= 3) return 5000;
+        return rates.report;
+    }
+
+    function updateResidentialNote() {
+        const el = document.getElementById('residential-lab-note');
+        if (!el) return;
+        const show = siteData.buildingType === 'Residential' && siteData.stories <= 3;
+        el.style.display = show ? 'block' : 'none';
+    }
+
+
+    function startEdit(key) {
+        const wrap = document.getElementById('inp-' + key).parentElement;
+        wrap.classList.add('editing');
+        document.getElementById('disp-' + key).style.display = 'none';
+        const inp = document.getElementById('inp-' + key);
+        inp.style.display = 'block';
+        inp.focus();
+        inp.select();
+        wrap.querySelector('.rate-edit-icon').style.display = 'none';
+    }
+
+    function endEdit(key) {
+        const inp = document.getElementById('inp-' + key);
+        const wrap = inp.parentElement;
+        wrap.classList.remove('editing');
+        let val = parseFloat(inp.value);
+        if (isNaN(val) || val < 0) val = DEFAULT_RATES[key];
+        inp.value = val;
+        rates[key] = val;
+        const disp = document.getElementById('disp-' + key);
+        disp.style.display = 'block';
+        disp.textContent = val.toLocaleString();
+        inp.style.display = 'none';
+        wrap.querySelector('.rate-edit-icon').style.display = 'block';
+
+        const badge = document.getElementById('badge-' + key);
+        if (badge) badge.style.display = (val !== DEFAULT_RATES[key]) ? 'inline-block' : 'none';
+        disp.classList.toggle('rate-changed', val !== DEFAULT_RATES[key]);
+
+        if (document.getElementById('report-content').style.display !== 'none') {
+            recalcCosts();
+        }
+    }
+
+    function resetRates() {
+        rates = { ...DEFAULT_RATES };
+        Object.keys(DEFAULT_RATES).forEach(key => {
+            const inp = document.getElementById('inp-' + key);
+            inp.value = DEFAULT_RATES[key];
+            const disp = document.getElementById('disp-' + key);
+            disp.textContent = DEFAULT_RATES[key].toLocaleString();
+            disp.classList.remove('rate-changed');
+            const badge = document.getElementById('badge-' + key);
+            if (badge) badge.style.display = 'none';
+        });
+        if (document.getElementById('report-content').style.display !== 'none') {
+            recalcCosts();
+        }
+    }
+
+    function recalcCosts() {
+        if (!siteData.lat) return;
+        const requiredDepthFt = sowersDepthFt(siteData.stories);
+        const rockPred = predictRockDepth(siteData.lat, siteData.lng);
+        let soilDepthFt = requiredDepthFt;
+        let rockDepthFt = 0;
+        let depthFt = requiredDepthFt;
+
+        if (rockPred && rockPred.depthFt < requiredDepthFt) {
+            soilDepthFt = rockPred.depthFt;
+            rockDepthFt = 10;
+            depthFt = soilDepthFt + rockDepthFt;
+        }
+
+        const bhCount    = Math.ceil(siteData.len / 82.02) * Math.ceil(siteData.wid / 82.02);
+        const sptTests   = Math.floor(soilDepthFt / 3);
+        const sptCost    = sptTests * bhCount * rates.spt;
+        const drillCost  = (soilDepthFt * rates.drill + rockDepthFt * 5000) * bhCount;
+        const soilProfile = buildSoilProfile(siteData.lat, siteData.lng, depthFt);
+        const labResult   = calcLabCost(soilProfile, depthFt, siteData.gwt || 999);
+        const labCost     = labResult.lab * bhCount;
+        const chemCost    = labResult.chemical;
+
+        document.getElementById('rep-depth').innerText      = depthFt + ' ft';
+        document.getElementById('rep-samples').innerText    = Math.ceil(depthFt / 5);
+
+        document.getElementById('cost-drill').innerText     = Math.round(drillCost).toLocaleString();
+        document.getElementById('cost-spt').innerText       = Math.round(sptCost).toLocaleString();
+        document.getElementById('cost-lab').innerText       = Math.round(labCost).toLocaleString();
+        document.getElementById('cost-report-fee').innerText = getReportFee().toLocaleString();
+        const chemRow = document.getElementById('row-chemical');
+        if (chemRow) chemRow.style.display = chemCost > 0 ? 'flex' : 'none';
+        const chemEl = document.getElementById('cost-chemical');
+        if (chemEl) chemEl.innerText = Math.round(chemCost).toLocaleString();
+        renderSampleSummary(soilProfile, depthFt);
+        const distText = document.getElementById('rep-route-dist').innerText;
+        if (distText) {
+            const dist  = parseFloat(distText);
+            const mob   = dist <= 20 ? rates.mob20 : rates.mob30;
+            document.getElementById('cost-mob').innerText = mob.toLocaleString();
+            const total = drillCost + sptCost + labCost + chemCost + mob + getReportFee();
+            document.getElementById('cost-grand').innerText = 'TOTAL: PKR ' + Math.round(total).toLocaleString();
+            updateResidentialNote();
+        }
+        renderRockWarning(rockPred, requiredDepthFt, bhCount, rates);
+    }
+
     const boreholes = [
-        { name: "Naval Anchorage", lat: 33.5380, lng: 73.0290, fines: 91.5, nValue: null },
-        { name: "DHA Phase 2 Sec-E", lat: 33.5190, lng: 73.0850, fines: 92.0, nValue: null },
-        { name: "Park View City", lat: 33.6450, lng: 73.0100, fines: 66.0, nValue: null },
-        { name: "Bahria Town Ph-VII (A)", lat: 33.5300, lng: 73.1800, fines: 20.0, nValue: 6 },
-        { name: "Bahria Town Ph-VII (B)", lat: 33.5310, lng: 73.1810, fines: 26.0, nValue: 6 },
-        { name: "DHA PineHills", lat: 33.5500, lng: 73.1200, fines: 38.0, nValue: 30 },
-        { name: "DHA Margalla Enclave", lat: 33.5600, lng: 73.1100, fines: 80.0, nValue: null },
-        { name: "Margalla Orchards DHA", lat: 33.5550, lng: 73.1150, fines: 55.0, nValue: 20 },
-        { name: "RCCI Rawat", lat: 33.5600, lng: 73.2800, fines: 57.0, nValue: 50 },
-        { name: "F-11 Markaz", lat: 33.6900, lng: 73.0200, fines: 60.0, nValue: null },
-        { name: "New Metro City", lat: 33.2500, lng: 73.3000, fines: 76.0, nValue: null },
-        { name: "Mumtaz City", lat: 33.6200, lng: 73.1500, fines: 75.0, nValue: null },
-        { name: "Premier Tower Blue Area", lat: 33.7200, lng: 73.0600, fines: 77.0, nValue: null },
-        { name: "G-13/4 ISB", lat: 33.6700, lng: 72.9800, fines: null, nValue: null },
-        { name: "D-12 ISB", lat: 33.7200, lng: 73.0100, fines: null, nValue: null }
+      { name:"Naval Anchorage BH1", lat:33.538, lng:73.029, rockDepthFt:null, layers:[
+          { depthFt:5.0, gravel:0.0, sand:0.0, fines:null, LL:null, PL:null, PI:null, N:8.2, rock:false },
+          { depthFt:10.0, gravel:0.0, sand:8.0, fines:92.0, LL:28.0, PL:19.0, PI:9.0, N:12.0, rock:false },
+          { depthFt:15.0, gravel:null, sand:null, fines:null, LL:null, PL:null, PI:null, N:14.0, rock:false },
+          { depthFt:20.0, gravel:0.0, sand:7.7, fines:92.5, LL:29.0, PL:19.5, PI:9.5, N:19.0, rock:false },
+          { depthFt:25.0, gravel:null, sand:null, fines:null, LL:null, PL:null, PI:null, N:23.0, rock:false },
+          { depthFt:30.0, gravel:0.0, sand:8.5, fines:91.5, LL:null, PL:null, PI:null, N:28.0, rock:false },
+          { depthFt:35.0, gravel:null, sand:null, fines:null, LL:null, PL:null, PI:null, N:31.0, rock:false }
+      ]},
+      { name:"Naval Anchorage BH2", lat:33.5382, lng:73.0292, rockDepthFt:null, layers:[
+          { depthFt:5.0, gravel:null, sand:null, fines:null, LL:null, PL:null, PI:null, N:9.0, rock:false },
+          { depthFt:10.0, gravel:null, sand:null, fines:null, LL:null, PL:null, PI:null, N:11.0, rock:false },
+          { depthFt:15.0, gravel:0.0, sand:9.1, fines:90.9, LL:28.6, PL:18.5, PI:10.1, N:13.0, rock:false },
+          { depthFt:20.0, gravel:null, sand:null, fines:null, LL:null, PL:null, PI:null, N:18.0, rock:false },
+          { depthFt:25.0, gravel:0.0, sand:8.8, fines:91.2, LL:28.3, PL:18.0, PI:10.3, N:19.0, rock:false },
+          { depthFt:30.0, gravel:null, sand:null, fines:null, LL:null, PL:null, PI:null, N:24.0, rock:false },
+          { depthFt:35.0, gravel:0.0, sand:8.2, fines:91.8, LL:null, PL:null, PI:null, N:27.0, rock:false }
+      ]},
+      { name:"Park View City (Overseas) BH1", lat:33.713638, lng:73.221585, rockDepthFt:10, layers:[
+          { depthFt:10.0, gravel:7.33, sand:27.67, fines:65.0, LL:null, PL:null, PI:null, N:13.0, rock:true },
+          { depthFt:15.0, gravel:9.0, sand:30.33, fines:60.67, LL:null, PL:null, PI:null, N:26.0, rock:true }
+      ]},
+      { name:"Park View City (Overseas) BH2", lat:33.71364, lng:73.221587, rockDepthFt:20, layers:[
+          { depthFt:5.0, gravel:5.25, sand:21.75, fines:73.0, LL:null, PL:null, PI:null, N:11.0, rock:false },
+          { depthFt:20.0, gravel:4.44, sand:28.44, fines:67.11, LL:null, PL:null, PI:null, N:23.0, rock:true }
+      ]},
+      { name:"DHA PineHills BH1", lat:33.542258, lng:73.186831, rockDepthFt:null, layers:[
+          { depthFt:10.0, gravel:null, sand:null, fines:null, LL:25.0, PL:20.0, PI:5.0, N:19.0, rock:false },
+          { depthFt:25.0, gravel:null, sand:null, fines:null, LL:null, PL:null, PI:null, N:42.0, rock:false }
+      ]},
+      { name:"DHA PineHills BH2", lat:33.542358, lng:73.186931, rockDepthFt:null, layers:[
+          { depthFt:15.0, gravel:null, sand:null, fines:null, LL:28.0, PL:22.0, PI:6.0, N:13.0, rock:false },
+          { depthFt:30.0, gravel:null, sand:null, fines:null, LL:null, PL:null, PI:null, N:50.0, rock:false }
+      ]},
+      { name:"Margalla Enclave BH1", lat:33.692619, lng:73.169703, rockDepthFt:null, layers:[
+          { depthFt:5.0, gravel:5.0, sand:15.0, fines:80.0, LL:null, PL:null, PI:null, N:5.0, rock:false },
+          { depthFt:10.0, gravel:5.0, sand:15.0, fines:80.0, LL:21.0, PL:17.0, PI:4.0, N:3.0, rock:false },
+          { depthFt:15.0, gravel:5.0, sand:15.0, fines:80.0, LL:null, PL:null, PI:null, N:4.0, rock:false },
+          { depthFt:20.0, gravel:5.0, sand:15.0, fines:80.0, LL:24.0, PL:19.0, PI:5.0, N:7.0, rock:false },
+          { depthFt:25.0, gravel:5.0, sand:15.0, fines:80.0, LL:null, PL:null, PI:null, N:10.0, rock:false },
+          { depthFt:30.0, gravel:5.0, sand:15.0, fines:80.0, LL:null, PL:null, PI:null, N:13.0, rock:false },
+          { depthFt:35.0, gravel:5.0, sand:15.0, fines:80.0, LL:29.0, PL:23.0, PI:6.0, N:15.0, rock:false }
+      ]},
+      { name:"Margalla Enclave BH2", lat:33.692719, lng:73.169803, rockDepthFt:null, layers:[
+          { depthFt:5.0, gravel:5.0, sand:15.0, fines:80.0, LL:21.0, PL:16.0, PI:5.0, N:6.0, rock:false },
+          { depthFt:10.0, gravel:5.0, sand:15.0, fines:80.0, LL:null, PL:null, PI:null, N:3.0, rock:false },
+          { depthFt:15.0, gravel:5.0, sand:15.0, fines:80.0, LL:25.0, PL:21.0, PI:4.0, N:7.0, rock:false },
+          { depthFt:20.0, gravel:5.0, sand:15.0, fines:80.0, LL:null, PL:null, PI:null, N:8.0, rock:false },
+          { depthFt:25.0, gravel:5.0, sand:15.0, fines:80.0, LL:null, PL:null, PI:null, N:10.0, rock:false },
+          { depthFt:30.0, gravel:5.0, sand:15.0, fines:80.0, LL:27.0, PL:22.0, PI:5.0, N:12.0, rock:false },
+          { depthFt:35.0, gravel:5.0, sand:15.0, fines:80.0, LL:null, PL:null, PI:null, N:16.0, rock:false }
+      ]},
+      { name:"Margalla Orchards BH1", lat:33.655528, lng:73.151856, rockDepthFt:null, layers:[
+          { depthFt:5.0, gravel:5.0, sand:20.0, fines:75.0, LL:23.0, PL:19.0, PI:4.0, N:4.0, rock:false },
+          { depthFt:10.0, gravel:5.0, sand:20.0, fines:75.0, LL:null, PL:null, PI:null, N:6.0, rock:false },
+          { depthFt:15.0, gravel:5.0, sand:25.0, fines:70.0, LL:25.0, PL:20.0, PI:5.0, N:15.0, rock:false },
+          { depthFt:20.0, gravel:30.0, sand:50.0, fines:20.0, LL:null, PL:null, PI:null, N:50.0, rock:false },
+          { depthFt:25.0, gravel:35.0, sand:50.0, fines:15.0, LL:null, PL:null, PI:null, N:50.0, rock:false }
+      ]},
+      { name:"Margalla Orchards BH2", lat:33.655628, lng:73.151956, rockDepthFt:null, layers:[
+          { depthFt:5.0, gravel:5.0, sand:20.0, fines:75.0, LL:null, PL:null, PI:null, N:3.0, rock:false },
+          { depthFt:10.0, gravel:5.0, sand:25.0, fines:70.0, LL:25.0, PL:20.0, PI:5.0, N:9.0, rock:false },
+          { depthFt:15.0, gravel:5.0, sand:25.0, fines:70.0, LL:null, PL:null, PI:null, N:13.0, rock:false },
+          { depthFt:20.0, gravel:30.0, sand:50.0, fines:20.0, LL:null, PL:null, PI:null, N:50.0, rock:false },
+          { depthFt:25.0, gravel:35.0, sand:50.0, fines:15.0, LL:null, PL:null, PI:null, N:50.0, rock:false }
+      ]},
+      { name:"RCCI Rawat BH1", lat:33.5238, lng:73.243622, rockDepthFt:null, layers:[
+          { depthFt:5.0, gravel:10.0, sand:25.0, fines:65.0, LL:22.0, PL:18.0, PI:4.0, N:4.0, rock:false },
+          { depthFt:10.0, gravel:10.0, sand:25.0, fines:65.0, LL:null, PL:null, PI:null, N:5.0, rock:false },
+          { depthFt:15.0, gravel:15.0, sand:30.0, fines:55.0, LL:25.0, PL:20.0, PI:5.0, N:12.0, rock:false },
+          { depthFt:20.0, gravel:15.0, sand:30.0, fines:55.0, LL:null, PL:null, PI:null, N:13.0, rock:false },
+          { depthFt:25.0, gravel:15.0, sand:35.0, fines:50.0, LL:null, PL:null, PI:null, N:11.0, rock:false },
+          { depthFt:30.0, gravel:15.0, sand:35.0, fines:50.0, LL:24.0, PL:20.0, PI:4.0, N:8.0, rock:false },
+          { depthFt:35.0, gravel:15.0, sand:35.0, fines:50.0, LL:null, PL:null, PI:null, N:9.0, rock:false },
+          { depthFt:40.0, gravel:15.0, sand:35.0, fines:50.0, LL:null, PL:null, PI:null, N:8.0, rock:false },
+          { depthFt:45.0, gravel:20.0, sand:30.0, fines:50.0, LL:31.0, PL:25.0, PI:6.0, N:44.0, rock:false },
+          { depthFt:50.0, gravel:20.0, sand:30.0, fines:50.0, LL:null, PL:null, PI:null, N:50.0, rock:false }
+      ]},
+      { name:"RCCI Rawat BH2", lat:33.524, lng:73.243822, rockDepthFt:null, layers:[
+          { depthFt:5.0, gravel:10.0, sand:25.0, fines:65.0, LL:null, PL:null, PI:null, N:5.0, rock:false },
+          { depthFt:10.0, gravel:15.0, sand:30.0, fines:55.0, LL:23.0, PL:19.0, PI:4.0, N:6.0, rock:false },
+          { depthFt:15.0, gravel:15.0, sand:30.0, fines:55.0, LL:null, PL:null, PI:null, N:9.0, rock:false },
+          { depthFt:20.0, gravel:20.0, sand:35.0, fines:45.0, LL:26.0, PL:21.0, PI:5.0, N:13.0, rock:false },
+          { depthFt:25.0, gravel:20.0, sand:35.0, fines:45.0, LL:null, PL:null, PI:null, N:10.0, rock:false },
+          { depthFt:30.0, gravel:25.0, sand:40.0, fines:35.0, LL:null, PL:null, PI:null, N:50.0, rock:false }
+      ]},
+      { name:"F-11 Markaz BH1", lat:33.68705, lng:72.989172, rockDepthFt:null, layers:[
+          { depthFt:5.0, gravel:10.0, sand:30.0, fines:60.0, LL:31.0, PL:19.0, PI:12.0, N:18.0, rock:false },
+          { depthFt:10.0, gravel:8.0, sand:32.0, fines:60.0, LL:33.0, PL:20.0, PI:13.0, N:24.0, rock:false }
+      ]},
+      { name:"F-11 Markaz BH2", lat:33.68725, lng:72.989372, rockDepthFt:null, layers:[
+          { depthFt:5.0, gravel:6.0, sand:34.0, fines:60.0, LL:29.0, PL:18.0, PI:11.0, N:14.0, rock:false },
+          { depthFt:10.0, gravel:7.0, sand:33.0, fines:60.0, LL:30.0, PL:18.0, PI:12.0, N:21.0, rock:false }
+      ]},
+      { name:"New Metro City BH1", lat:33.215456, lng:73.339583, rockDepthFt:null, layers:[
+          { depthFt:5.0, gravel:5.0, sand:15.0, fines:80.0, LL:25.0, PL:20.0, PI:5.0, N:3.0, rock:false },
+          { depthFt:10.0, gravel:5.0, sand:15.0, fines:80.0, LL:20.0, PL:16.0, PI:4.0, N:4.0, rock:false },
+          { depthFt:15.0, gravel:5.0, sand:20.0, fines:75.0, LL:23.0, PL:17.0, PI:6.0, N:6.0, rock:false },
+          { depthFt:20.0, gravel:5.0, sand:20.0, fines:75.0, LL:null, PL:null, PI:null, N:7.0, rock:false },
+          { depthFt:25.0, gravel:5.0, sand:25.0, fines:70.0, LL:29.0, PL:22.0, PI:7.0, N:5.0, rock:false },
+          { depthFt:30.0, gravel:5.0, sand:25.0, fines:70.0, LL:null, PL:null, PI:null, N:11.0, rock:false },
+          { depthFt:35.0, gravel:5.0, sand:25.0, fines:70.0, LL:27.0, PL:21.0, PI:6.0, N:28.0, rock:false }
+      ]},
+      { name:"Mumtaz City BH1", lat:33.580825, lng:72.855653, rockDepthFt:null, layers:[
+          { depthFt:5.0, gravel:5.0, sand:15.0, fines:80.0, LL:25.0, PL:20.0, PI:5.0, N:4.0, rock:false },
+          { depthFt:10.0, gravel:5.0, sand:15.0, fines:80.0, LL:20.0, PL:16.0, PI:4.0, N:3.0, rock:false },
+          { depthFt:15.0, gravel:5.0, sand:20.0, fines:75.0, LL:23.0, PL:17.0, PI:6.0, N:5.0, rock:false },
+          { depthFt:20.0, gravel:5.0, sand:20.0, fines:75.0, LL:null, PL:null, PI:null, N:7.0, rock:false },
+          { depthFt:25.0, gravel:5.0, sand:25.0, fines:70.0, LL:29.0, PL:22.0, PI:7.0, N:10.0, rock:false },
+          { depthFt:30.0, gravel:5.0, sand:25.0, fines:70.0, LL:null, PL:null, PI:null, N:12.0, rock:false },
+          { depthFt:35.0, gravel:5.0, sand:25.0, fines:70.0, LL:27.0, PL:21.0, PI:6.0, N:26.0, rock:false }
+      ]},
+      { name:"G-13/4 BH1", lat:33.652069, lng:72.973204, rockDepthFt:null, layers:[
+          { depthFt:5.0, gravel:null, sand:null, fines:null, LL:25.0, PL:20.0, PI:5.0, N:26.0, rock:false },
+          { depthFt:10.0, gravel:null, sand:null, fines:null, LL:29.0, PL:22.0, PI:7.0, N:33.0, rock:false }
+      ]},
+      { name:"G-13/4 BH2", lat:33.652169, lng:72.973304, rockDepthFt:null, layers:[
+          { depthFt:5.0, gravel:null, sand:null, fines:null, LL:25.0, PL:20.0, PI:5.0, N:26.0, rock:false },
+          { depthFt:10.0, gravel:null, sand:null, fines:null, LL:29.0, PL:22.0, PI:7.0, N:33.0, rock:false }
+      ]},
+      { name:"D-12 BH1", lat:33.706214, lng:72.9566, rockDepthFt:null, layers:[
+          { depthFt:5.0, gravel:null, sand:null, fines:null, LL:32.0, PL:18.0, PI:14.0, N:12.0, rock:false },
+          { depthFt:10.0, gravel:null, sand:null, fines:null, LL:34.0, PL:19.0, PI:15.0, N:18.0, rock:false }
+      ]},
+      { name:"D-12 BH2", lat:33.706414, lng:72.9568, rockDepthFt:null, layers:[
+          { depthFt:5.0, gravel:null, sand:null, fines:null, LL:29.0, PL:17.0, PI:12.0, N:10.0, rock:false },
+          { depthFt:10.0, gravel:null, sand:null, fines:null, LL:31.0, PL:18.0, PI:13.0, N:16.0, rock:false }
+      ]},
+      { name:"Premier Tower Blue Area BH1", lat:33.690731, lng:73.254394, rockDepthFt:null, layers:[
+          { depthFt:5.0, gravel:5.0, sand:15.0, fines:80.0, LL:25.0, PL:20.0, PI:5.0, N:3.0, rock:false },
+          { depthFt:10.0, gravel:5.0, sand:15.0, fines:80.0, LL:null, PL:null, PI:null, N:4.0, rock:false },
+          { depthFt:15.0, gravel:5.0, sand:20.0, fines:75.0, LL:23.0, PL:17.0, PI:6.0, N:6.0, rock:false },
+          { depthFt:20.0, gravel:5.0, sand:20.0, fines:75.0, LL:null, PL:null, PI:null, N:7.0, rock:false },
+          { depthFt:25.0, gravel:5.0, sand:20.0, fines:75.0, LL:null, PL:null, PI:null, N:5.0, rock:false },
+          { depthFt:30.0, gravel:5.0, sand:25.0, fines:70.0, LL:null, PL:null, PI:null, N:11.0, rock:false },
+          { depthFt:35.0, gravel:5.0, sand:25.0, fines:70.0, LL:null, PL:null, PI:null, N:28.0, rock:false }
+      ]},
+      { name:"Premier Tower Blue Area BH2", lat:33.690931, lng:73.254594, rockDepthFt:null, layers:[
+          { depthFt:5.0, gravel:5.0, sand:15.0, fines:80.0, LL:null, PL:null, PI:null, N:4.0, rock:false },
+          { depthFt:10.0, gravel:5.0, sand:15.0, fines:80.0, LL:null, PL:null, PI:null, N:3.0, rock:false },
+          { depthFt:15.0, gravel:5.0, sand:20.0, fines:75.0, LL:null, PL:null, PI:null, N:6.0, rock:false },
+          { depthFt:20.0, gravel:5.0, sand:20.0, fines:75.0, LL:null, PL:null, PI:null, N:7.0, rock:false },
+          { depthFt:25.0, gravel:5.0, sand:20.0, fines:75.0, LL:null, PL:null, PI:null, N:10.0, rock:false },
+          { depthFt:30.0, gravel:5.0, sand:25.0, fines:70.0, LL:null, PL:null, PI:null, N:12.0, rock:false },
+          { depthFt:35.0, gravel:5.0, sand:25.0, fines:70.0, LL:null, PL:null, PI:null, N:26.0, rock:false }
+      ]},
+      { name:"Avenue Towers BH1", lat:33.598297, lng:73.140431, rockDepthFt:15, layers:[
+          { depthFt:5.0, gravel:10.0, sand:40.0, fines:50.0, LL:null, PL:null, PI:null, N:10.0, rock:false },
+          { depthFt:10.0, gravel:10.0, sand:40.0, fines:50.0, LL:null, PL:null, PI:null, N:17.0, rock:false },
+          { depthFt:15.0, gravel:5.0, sand:30.0, fines:65.0, LL:null, PL:null, PI:null, N:18.0, rock:true },
+          { depthFt:20.0, gravel:5.0, sand:30.0, fines:65.0, LL:null, PL:null, PI:null, N:26.0, rock:true },
+          { depthFt:25.0, gravel:5.0, sand:25.0, fines:70.0, LL:null, PL:null, PI:null, N:30.0, rock:true },
+          { depthFt:30.0, gravel:5.0, sand:25.0, fines:70.0, LL:null, PL:null, PI:null, N:15.0, rock:true },
+          { depthFt:35.0, gravel:5.0, sand:25.0, fines:70.0, LL:null, PL:null, PI:null, N:40.0, rock:true }
+      ]},
+      { name:"Avenue Towers BH2", lat:33.598497, lng:73.140631, rockDepthFt:null, layers:[
+          { depthFt:5.0, gravel:10.0, sand:40.0, fines:50.0, LL:null, PL:null, PI:null, N:19.0, rock:false },
+          { depthFt:10.0, gravel:10.0, sand:40.0, fines:50.0, LL:null, PL:null, PI:null, N:12.0, rock:false },
+          { depthFt:15.0, gravel:10.0, sand:40.0, fines:50.0, LL:null, PL:null, PI:null, N:27.0, rock:false },
+          { depthFt:20.0, gravel:10.0, sand:40.0, fines:50.0, LL:null, PL:null, PI:null, N:47.0, rock:false },
+          { depthFt:25.0, gravel:10.0, sand:40.0, fines:50.0, LL:null, PL:null, PI:null, N:46.0, rock:false },
+          { depthFt:30.0, gravel:10.0, sand:40.0, fines:50.0, LL:null, PL:null, PI:null, N:47.0, rock:false },
+          { depthFt:35.0, gravel:10.0, sand:40.0, fines:50.0, LL:null, PL:null, PI:null, N:35.0, rock:false }
+      ]},
+      { name:"China Town Bahria BH1", lat:33.499533, lng:73.081806, rockDepthFt:null, layers:[
+          { depthFt:5.0, gravel:0.0, sand:10.0, fines:90.0, LL:null, PL:null, PI:null, N:25.0, rock:false },
+          { depthFt:10.0, gravel:0.0, sand:10.0, fines:90.0, LL:null, PL:null, PI:null, N:30.0, rock:false },
+          { depthFt:15.0, gravel:0.0, sand:10.0, fines:90.0, LL:26.0, PL:21.0, PI:5.0, N:39.0, rock:false },
+          { depthFt:30.0, gravel:0.0, sand:10.0, fines:90.0, LL:23.0, PL:17.0, PI:6.0, N:50.0, rock:false },
+          { depthFt:45.0, gravel:0.0, sand:10.0, fines:90.0, LL:29.0, PL:24.0, PI:5.0, N:50.0, rock:false }
+      ]},
+      { name:"China Town Bahria BH2", lat:33.499733, lng:73.082006, rockDepthFt:null, layers:[
+          { depthFt:5.0, gravel:0.0, sand:10.0, fines:90.0, LL:null, PL:null, PI:null, N:20.0, rock:false },
+          { depthFt:10.0, gravel:0.0, sand:10.0, fines:90.0, LL:27.0, PL:22.0, PI:5.0, N:22.0, rock:false },
+          { depthFt:25.0, gravel:0.0, sand:10.0, fines:90.0, LL:23.0, PL:18.0, PI:5.0, N:42.0, rock:false },
+          { depthFt:40.0, gravel:0.0, sand:10.0, fines:90.0, LL:25.0, PL:21.0, PI:4.0, N:50.0, rock:false },
+          { depthFt:55.0, gravel:0.0, sand:10.0, fines:90.0, LL:29.0, PL:22.0, PI:7.0, N:50.0, rock:false }
+      ]},
+      { name:"Kuri Road Commercial BH1", lat:33.688375, lng:73.164006, rockDepthFt:null, layers:[
+          { depthFt:5.0, gravel:8.0, sand:32.0, fines:60.0, LL:31.0, PL:19.0, PI:12.0, N:18.0, rock:false },
+          { depthFt:10.0, gravel:7.0, sand:33.0, fines:60.0, LL:33.0, PL:20.0, PI:13.0, N:24.0, rock:false }
+      ]},
+      { name:"Kuri Road Commercial BH2", lat:33.688575, lng:73.164206, rockDepthFt:null, layers:[
+          { depthFt:5.0, gravel:6.0, sand:34.0, fines:60.0, LL:29.0, PL:18.0, PI:11.0, N:14.0, rock:false },
+          { depthFt:10.0, gravel:6.0, sand:34.0, fines:60.0, LL:30.0, PL:18.0, PI:12.0, N:21.0, rock:false }
+      ]},
+      { name:"Monument H-8 BH1", lat:33.681764, lng:73.073383, rockDepthFt:null, layers:[
+          { depthFt:5.0, gravel:2.0, sand:8.0, fines:90.0, LL:25.0, PL:20.0, PI:5.0, N:4.0, rock:false },
+          { depthFt:15.0, gravel:2.0, sand:10.0, fines:88.0, LL:28.0, PL:22.0, PI:6.0, N:23.0, rock:false }
+      ]},
+      { name:"Monument H-8 BH2", lat:33.681964, lng:73.073583, rockDepthFt:null, layers:[
+          { depthFt:10.0, gravel:1.0, sand:9.0, fines:90.0, LL:22.0, PL:18.0, PI:4.0, N:6.0, rock:false },
+          { depthFt:20.0, gravel:1.0, sand:12.0, fines:87.0, LL:27.0, PL:22.0, PI:5.0, N:22.0, rock:false }
+      ]},
+      { name:"Bahria Enclave Sec-F BH1", lat:33.683017, lng:73.225558, rockDepthFt:null, layers:[
+          { depthFt:5.0, gravel:2.0, sand:8.0, fines:90.0, LL:25.0, PL:20.0, PI:5.0, N:4.0, rock:false },
+          { depthFt:15.0, gravel:2.0, sand:10.0, fines:88.0, LL:28.0, PL:22.0, PI:6.0, N:23.0, rock:false }
+      ]},
+      { name:"Bahria Enclave Sec-F BH2", lat:33.683217, lng:73.225758, rockDepthFt:null, layers:[
+          { depthFt:10.0, gravel:1.0, sand:9.0, fines:90.0, LL:22.0, PL:18.0, PI:4.0, N:6.0, rock:false },
+          { depthFt:20.0, gravel:1.0, sand:12.0, fines:87.0, LL:27.0, PL:22.0, PI:5.0, N:22.0, rock:false }
+      ]},
+      { name:"F-8 Markaz BH1", lat:33.713458, lng:73.350425, rockDepthFt:null, layers:[
+          { depthFt:5.0, gravel:0.0, sand:5.0, fines:95.0, LL:25.0, PL:20.0, PI:5.0, N:2.0, rock:false },
+          { depthFt:15.0, gravel:0.0, sand:4.0, fines:96.0, LL:21.0, PL:17.0, PI:4.0, N:5.0, rock:false },
+          { depthFt:30.0, gravel:0.0, sand:3.0, fines:97.0, LL:30.0, PL:23.0, PI:7.0, N:32.0, rock:false }
+      ]},
+      { name:"F-8 Markaz BH2", lat:33.713658, lng:73.350625, rockDepthFt:null, layers:[
+          { depthFt:10.0, gravel:0.0, sand:5.0, fines:95.0, LL:22.0, PL:19.0, PI:3.0, N:3.0, rock:false },
+          { depthFt:20.0, gravel:0.0, sand:4.0, fines:96.0, LL:26.0, PL:22.0, PI:4.0, N:4.0, rock:false },
+          { depthFt:35.0, gravel:0.0, sand:3.0, fines:97.0, LL:32.0, PL:24.0, PI:8.0, N:14.0, rock:false }
+      ]},
+      { name:"Jinnah Ave Blue Area BH1", lat:33.710853, lng:73.059483, rockDepthFt:null, layers:[
+          { depthFt:5.0, gravel:0.0, sand:5.0, fines:95.0, LL:25.0, PL:20.0, PI:5.0, N:2.0, rock:false },
+          { depthFt:15.0, gravel:0.0, sand:4.0, fines:96.0, LL:21.0, PL:17.0, PI:4.0, N:5.0, rock:false },
+          { depthFt:30.0, gravel:0.0, sand:3.0, fines:97.0, LL:30.0, PL:23.0, PI:7.0, N:32.0, rock:false }
+      ]},
+      { name:"Jinnah Ave Blue Area BH2", lat:33.711053, lng:73.059683, rockDepthFt:null, layers:[
+          { depthFt:10.0, gravel:0.0, sand:5.0, fines:95.0, LL:22.0, PL:19.0, PI:3.0, N:3.0, rock:false },
+          { depthFt:20.0, gravel:0.0, sand:4.0, fines:96.0, LL:26.0, PL:22.0, PI:4.0, N:4.0, rock:false },
+          { depthFt:35.0, gravel:0.0, sand:3.0, fines:97.0, LL:32.0, PL:24.0, PI:8.0, N:14.0, rock:false }
+      ]},
+      { name:"Zamar Valley BH1", lat:33.605969, lng:72.905175, rockDepthFt:null, layers:[
+          { depthFt:5.0, gravel:1.0, sand:3.0, fines:96.0, LL:22.0, PL:18.0, PI:4.0, N:2.0, rock:false },
+          { depthFt:15.0, gravel:1.0, sand:3.0, fines:96.0, LL:25.0, PL:20.0, PI:5.0, N:6.0, rock:false },
+          { depthFt:25.0, gravel:1.0, sand:2.0, fines:97.0, LL:24.0, PL:20.0, PI:4.0, N:5.0, rock:false },
+          { depthFt:35.0, gravel:0.0, sand:3.0, fines:97.0, LL:29.0, PL:23.0, PI:6.0, N:20.0, rock:false },
+          { depthFt:45.0, gravel:0.0, sand:2.0, fines:98.0, LL:31.0, PL:24.0, PI:7.0, N:24.0, rock:false }
+      ]},
+      { name:"Zamar Valley BH2", lat:33.606169, lng:72.905375, rockDepthFt:null, layers:[
+          { depthFt:10.0, gravel:1.0, sand:3.0, fines:96.0, LL:26.0, PL:21.0, PI:5.0, N:5.0, rock:false },
+          { depthFt:20.0, gravel:1.0, sand:3.0, fines:96.0, LL:23.0, PL:19.0, PI:4.0, N:7.0, rock:false },
+          { depthFt:30.0, gravel:1.0, sand:2.0, fines:97.0, LL:27.0, PL:21.0, PI:6.0, N:14.0, rock:false },
+          { depthFt:40.0, gravel:0.0, sand:3.0, fines:97.0, LL:30.0, PL:24.0, PI:6.0, N:21.0, rock:false },
+          { depthFt:50.0, gravel:0.0, sand:2.0, fines:98.0, LL:32.0, PL:25.0, PI:7.0, N:28.0, rock:false }
+      ]},
+      { name:"F-7/2 Markaz BH1", lat:33.723085, lng:73.053896, rockDepthFt:null, layers:[
+          { depthFt:5.0, gravel:5.0, sand:35.0, fines:60.0, LL:23.0, PL:19.0, PI:4.0, N:5.0, rock:false },
+          { depthFt:10.0, gravel:5.0, sand:30.0, fines:65.0, LL:null, PL:null, PI:null, N:10.0, rock:false },
+          { depthFt:15.0, gravel:5.0, sand:30.0, fines:65.0, LL:null, PL:null, PI:null, N:15.0, rock:false },
+          { depthFt:20.0, gravel:5.0, sand:25.0, fines:70.0, LL:28.0, PL:22.0, PI:6.0, N:16.0, rock:false },
+          { depthFt:25.0, gravel:5.0, sand:25.0, fines:70.0, LL:null, PL:null, PI:null, N:18.0, rock:false },
+          { depthFt:30.0, gravel:5.0, sand:20.0, fines:75.0, LL:null, PL:null, PI:null, N:21.0, rock:false }
+      ]},
+      { name:"F-7/2 Markaz BH2", lat:33.723185, lng:73.053996, rockDepthFt:null, layers:[
+          { depthFt:5.0, gravel:5.0, sand:35.0, fines:60.0, LL:null, PL:null, PI:null, N:3.0, rock:false },
+          { depthFt:10.0, gravel:5.0, sand:30.0, fines:65.0, LL:null, PL:null, PI:null, N:7.0, rock:false },
+          { depthFt:15.0, gravel:5.0, sand:30.0, fines:65.0, LL:25.0, PL:19.0, PI:6.0, N:10.0, rock:false },
+          { depthFt:20.0, gravel:5.0, sand:25.0, fines:70.0, LL:null, PL:null, PI:null, N:15.0, rock:false },
+          { depthFt:25.0, gravel:5.0, sand:25.0, fines:70.0, LL:null, PL:null, PI:null, N:16.0, rock:false },
+          { depthFt:30.0, gravel:5.0, sand:20.0, fines:75.0, LL:31.0, PL:24.0, PI:7.0, N:19.0, rock:false }
+      ]},
+      { name:"Bahria Ph8 Sector-M BH1", lat:33.481328, lng:73.082158, rockDepthFt:null, layers:[
+          { depthFt:5.0, gravel:10.0, sand:30.0, fines:60.0, LL:25.0, PL:20.0, PI:5.0, N:4.0, rock:false },
+          { depthFt:10.0, gravel:10.0, sand:30.0, fines:60.0, LL:25.0, PL:20.0, PI:5.0, N:6.0, rock:false },
+          { depthFt:20.0, gravel:10.0, sand:30.0, fines:60.0, LL:25.0, PL:20.0, PI:5.0, N:7.0, rock:false },
+          { depthFt:30.0, gravel:5.0, sand:25.0, fines:70.0, LL:26.0, PL:21.0, PI:5.0, N:23.0, rock:false },
+          { depthFt:40.0, gravel:5.0, sand:20.0, fines:75.0, LL:27.0, PL:21.0, PI:6.0, N:32.0, rock:false },
+          { depthFt:50.0, gravel:5.0, sand:20.0, fines:75.0, LL:27.0, PL:22.0, PI:5.0, N:44.0, rock:false }
+      ]},
+      { name:"Bahria Ph8 Sector-M BH2", lat:33.481528, lng:73.082358, rockDepthFt:null, layers:[
+          { depthFt:5.0, gravel:10.0, sand:30.0, fines:60.0, LL:24.0, PL:20.0, PI:4.0, N:6.0, rock:false },
+          { depthFt:10.0, gravel:10.0, sand:30.0, fines:60.0, LL:24.0, PL:20.0, PI:4.0, N:8.0, rock:false },
+          { depthFt:20.0, gravel:10.0, sand:30.0, fines:60.0, LL:25.0, PL:21.0, PI:4.0, N:9.0, rock:false },
+          { depthFt:30.0, gravel:5.0, sand:25.0, fines:70.0, LL:26.0, PL:21.0, PI:5.0, N:20.0, rock:false },
+          { depthFt:40.0, gravel:5.0, sand:20.0, fines:75.0, LL:27.0, PL:22.0, PI:5.0, N:32.0, rock:false },
+          { depthFt:50.0, gravel:5.0, sand:20.0, fines:75.0, LL:27.0, PL:22.0, PI:5.0, N:42.0, rock:false }
+      ]},
+      { name:"Bahria Civic Center Ph4 BH1", lat:33.550567, lng:73.125161, rockDepthFt:null, layers:[
+          { depthFt:5.0, gravel:5.0, sand:60.0, fines:35.0, LL:null, PL:null, PI:null, N:5.0, rock:false },
+          { depthFt:15.0, gravel:5.0, sand:45.0, fines:50.0, LL:23.0, PL:19.0, PI:4.0, N:4.0, rock:false },
+          { depthFt:25.0, gravel:5.0, sand:40.0, fines:55.0, LL:26.0, PL:21.0, PI:5.0, N:5.0, rock:false },
+          { depthFt:35.0, gravel:5.0, sand:35.0, fines:60.0, LL:24.0, PL:20.0, PI:4.0, N:8.0, rock:false },
+          { depthFt:45.0, gravel:5.0, sand:55.0, fines:40.0, LL:20.0, PL:16.0, PI:4.0, N:5.0, rock:false },
+          { depthFt:55.0, gravel:5.0, sand:30.0, fines:65.0, LL:27.0, PL:21.0, PI:6.0, N:9.0, rock:false },
+          { depthFt:65.0, gravel:5.0, sand:35.0, fines:60.0, LL:25.0, PL:20.0, PI:5.0, N:8.0, rock:false },
+          { depthFt:75.0, gravel:5.0, sand:25.0, fines:70.0, LL:30.0, PL:23.0, PI:7.0, N:34.0, rock:false }
+      ]},
+      { name:"Bahria Civic Center Ph4 BH2", lat:33.550767, lng:73.125361, rockDepthFt:null, layers:[
+          { depthFt:5.0, gravel:5.0, sand:65.0, fines:30.0, LL:null, PL:null, PI:null, N:8.0, rock:false },
+          { depthFt:15.0, gravel:5.0, sand:60.0, fines:35.0, LL:null, PL:null, PI:null, N:5.0, rock:false },
+          { depthFt:25.0, gravel:5.0, sand:50.0, fines:45.0, LL:null, PL:null, PI:null, N:6.0, rock:false },
+          { depthFt:35.0, gravel:5.0, sand:35.0, fines:60.0, LL:28.0, PL:22.0, PI:6.0, N:7.0, rock:false },
+          { depthFt:45.0, gravel:5.0, sand:45.0, fines:50.0, LL:null, PL:null, PI:null, N:6.0, rock:false }
+      ]},
+      { name:"DHA Phase IV Sector-B BH1", lat:33.514514, lng:73.079867, rockDepthFt:null, layers:[
+          { depthFt:5.0, gravel:5.0, sand:60.0, fines:35.0, LL:null, PL:null, PI:null, N:5.0, rock:false },
+          { depthFt:15.0, gravel:5.0, sand:45.0, fines:50.0, LL:23.0, PL:19.0, PI:4.0, N:4.0, rock:false },
+          { depthFt:25.0, gravel:5.0, sand:40.0, fines:55.0, LL:26.0, PL:21.0, PI:5.0, N:5.0, rock:false }
+      ]},
+      { name:"DHA Phase IV Sector-B BH2", lat:33.514714, lng:73.080067, rockDepthFt:null, layers:[
+          { depthFt:5.0, gravel:5.0, sand:65.0, fines:30.0, LL:null, PL:null, PI:null, N:8.0, rock:false },
+          { depthFt:15.0, gravel:5.0, sand:50.0, fines:45.0, LL:null, PL:null, PI:null, N:6.0, rock:false },
+          { depthFt:25.0, gravel:5.0, sand:35.0, fines:60.0, LL:28.0, PL:22.0, PI:6.0, N:7.0, rock:false }
+      ]},
+      { name:"Bahria Springs Ph7 BH1", lat:33.521358, lng:73.089356, rockDepthFt:null, layers:[
+          { depthFt:10.0, gravel:5.0, sand:15.0, fines:80.0, LL:26.0, PL:20.0, PI:6.0, N:15.0, rock:false },
+          { depthFt:25.0, gravel:5.0, sand:10.0, fines:85.0, LL:31.0, PL:24.0, PI:7.0, N:18.0, rock:false },
+          { depthFt:40.0, gravel:15.0, sand:10.0, fines:75.0, LL:24.0, PL:18.0, PI:6.0, N:50.0, rock:false }
+      ]},
+      { name:"Bahria Springs Ph7 BH2", lat:33.521558, lng:73.089556, rockDepthFt:null, layers:[
+          { depthFt:5.0, gravel:5.0, sand:10.0, fines:85.0, LL:28.0, PL:21.0, PI:7.0, N:6.0, rock:false },
+          { depthFt:15.0, gravel:5.0, sand:10.0, fines:85.0, LL:32.0, PL:26.0, PI:6.0, N:16.0, rock:false },
+          { depthFt:30.0, gravel:10.0, sand:70.0, fines:20.0, LL:21.0, PL:17.0, PI:4.0, N:7.0, rock:false }
+      ]},
+      { name:"Bahria Springs North BH1", lat:33.524881, lng:73.097431, rockDepthFt:null, layers:[
+          { depthFt:5.0, gravel:5.0, sand:35.0, fines:60.0, LL:22.0, PL:17.0, PI:5.0, N:3.0, rock:false },
+          { depthFt:15.0, gravel:5.0, sand:35.0, fines:60.0, LL:25.0, PL:21.0, PI:4.0, N:4.0, rock:false },
+          { depthFt:30.0, gravel:10.0, sand:25.0, fines:65.0, LL:28.0, PL:23.0, PI:5.0, N:8.0, rock:false },
+          { depthFt:45.0, gravel:15.0, sand:20.0, fines:65.0, LL:26.0, PL:19.0, PI:7.0, N:13.0, rock:false }
+      ]},
+      { name:"Bahria Springs North BH2", lat:33.525081, lng:73.097631, rockDepthFt:null, layers:[
+          { depthFt:10.0, gravel:5.0, sand:35.0, fines:60.0, LL:23.0, PL:19.0, PI:4.0, N:3.0, rock:false },
+          { depthFt:25.0, gravel:5.0, sand:20.0, fines:75.0, LL:27.0, PL:20.0, PI:7.0, N:5.0, rock:false },
+          { depthFt:40.0, gravel:10.0, sand:25.0, fines:65.0, LL:25.0, PL:20.0, PI:5.0, N:8.0, rock:false },
+          { depthFt:55.0, gravel:15.0, sand:20.0, fines:65.0, LL:28.0, PL:21.0, PI:7.0, N:16.0, rock:false }
+      ]},
+      { name:"ANF Staff Apartments BH1", lat:33.604133, lng:73.099, rockDepthFt:null, layers:[
+          { depthFt:5.0, gravel:5.0, sand:35.0, fines:60.0, LL:22.0, PL:17.0, PI:5.0, N:3.0, rock:false },
+          { depthFt:15.0, gravel:5.0, sand:35.0, fines:60.0, LL:25.0, PL:21.0, PI:4.0, N:4.0, rock:false }
+      ]},
+      { name:"Fazaia Housing Tarnol BH1", lat:33.603814, lng:72.84945, rockDepthFt:null, layers:[
+          { depthFt:5.0, gravel:5.0, sand:30.0, fines:65.0, LL:25.0, PL:19.0, PI:6.0, N:13.0, rock:false },
+          { depthFt:10.0, gravel:5.0, sand:25.0, fines:70.0, LL:null, PL:null, PI:null, N:18.0, rock:false },
+          { depthFt:15.0, gravel:5.0, sand:20.0, fines:75.0, LL:29.0, PL:22.0, PI:7.0, N:20.0, rock:false }
+      ]},
+      { name:"Fazaia Housing Tarnol BH2", lat:33.604014, lng:72.84965, rockDepthFt:null, layers:[
+          { depthFt:10.0, gravel:5.0, sand:30.0, fines:65.0, LL:26.0, PL:22.0, PI:4.0, N:17.0, rock:false },
+          { depthFt:15.0, gravel:5.0, sand:25.0, fines:70.0, LL:null, PL:null, PI:null, N:21.0, rock:false }
+      ]},
+      { name:"Bahria Enclave Ave-01 BH1", lat:33.681528, lng:73.223828, rockDepthFt:null, layers:[
+          { depthFt:5.0, gravel:5.0, sand:35.0, fines:60.0, LL:22.0, PL:18.0, PI:4.0, N:4.0, rock:false },
+          { depthFt:10.0, gravel:5.0, sand:35.0, fines:60.0, LL:22.0, PL:18.0, PI:4.0, N:6.0, rock:false },
+          { depthFt:15.0, gravel:5.0, sand:30.0, fines:65.0, LL:23.0, PL:19.0, PI:4.0, N:7.0, rock:false },
+          { depthFt:20.0, gravel:5.0, sand:30.0, fines:65.0, LL:23.0, PL:19.0, PI:4.0, N:10.0, rock:false },
+          { depthFt:25.0, gravel:3.0, sand:25.0, fines:72.0, LL:25.0, PL:20.0, PI:5.0, N:23.0, rock:false },
+          { depthFt:30.0, gravel:3.0, sand:25.0, fines:72.0, LL:25.0, PL:20.0, PI:5.0, N:28.0, rock:false },
+          { depthFt:35.0, gravel:2.0, sand:20.0, fines:78.0, LL:27.0, PL:21.0, PI:6.0, N:32.0, rock:false },
+          { depthFt:40.0, gravel:2.0, sand:20.0, fines:78.0, LL:27.0, PL:21.0, PI:6.0, N:36.0, rock:false },
+          { depthFt:45.0, gravel:2.0, sand:20.0, fines:78.0, LL:27.0, PL:22.0, PI:5.0, N:44.0, rock:false },
+          { depthFt:50.0, gravel:2.0, sand:20.0, fines:78.0, LL:27.0, PL:22.0, PI:5.0, N:48.0, rock:false }
+      ]},
+      { name:"Bahria Enclave Ave-01 BH2", lat:33.681728, lng:73.224028, rockDepthFt:null, layers:[
+          { depthFt:5.0, gravel:5.0, sand:35.0, fines:60.0, LL:22.0, PL:18.0, PI:4.0, N:6.0, rock:false },
+          { depthFt:10.0, gravel:5.0, sand:35.0, fines:60.0, LL:22.0, PL:18.0, PI:4.0, N:8.0, rock:false },
+          { depthFt:15.0, gravel:5.0, sand:30.0, fines:65.0, LL:23.0, PL:19.0, PI:4.0, N:9.0, rock:false },
+          { depthFt:20.0, gravel:5.0, sand:30.0, fines:65.0, LL:23.0, PL:19.0, PI:4.0, N:12.0, rock:false },
+          { depthFt:25.0, gravel:3.0, sand:25.0, fines:72.0, LL:25.0, PL:20.0, PI:5.0, N:20.0, rock:false },
+          { depthFt:30.0, gravel:3.0, sand:25.0, fines:72.0, LL:25.0, PL:20.0, PI:5.0, N:25.0, rock:false },
+          { depthFt:35.0, gravel:2.0, sand:20.0, fines:78.0, LL:27.0, PL:21.0, PI:6.0, N:32.0, rock:false },
+          { depthFt:40.0, gravel:2.0, sand:20.0, fines:78.0, LL:27.0, PL:21.0, PI:6.0, N:36.0, rock:false },
+          { depthFt:45.0, gravel:2.0, sand:20.0, fines:78.0, LL:27.0, PL:22.0, PI:5.0, N:42.0, rock:false },
+          { depthFt:50.0, gravel:2.0, sand:20.0, fines:78.0, LL:27.0, PL:22.0, PI:5.0, N:45.0, rock:false }
+      ]}
     ];
 
     const geotechnicalLabs = [
-        { name: "Soil Testing Services (STS)", lat: 33.6428, lng: 72.9605, phone: "+92 51 2355375" },
-        { name: "GeoCrust Geotechnical Services", lat: 33.7033, lng: 72.9790, phone: "+92 300 5110111" },
-        { name: "GCS - IBM Business Partner", lat: 33.6497, lng: 72.9663, phone: "+92 51 8730076" },
-        { name: "CMT Laboratory (Construction Material)", lat: 33.6261, lng: 72.9629, phone: "+92 51 9257462" },
-        { name: "GEOENGINEERS - Pakistan", lat: 33.6571, lng: 73.0949, phone: "+92 312 9881214" },
-        { name: "Geoscience Adv. Research Labs (GSP)", lat: 33.6748, lng: 73.1499, phone: "+92 51 9255135" },
-        { name: "Geo Deep Rock Engineering", lat: 33.6442, lng: 72.9224, phone: "+92 300 3926433" },
-        { name: "SEM Engineers Islamabad", lat: 33.5858, lng: 73.0891, phone: "+92 312 9881214" },
-        { name: "Global Geotech Material Lab", lat: 33.6516, lng: 73.0983, phone: "+92 344 5561532" },
-        { name: "CTTI (FWO Training Institute)", lat: 33.6286, lng: 73.0108, phone: "+92 51 9278103" },
-        { name: "Gemcon Engineering B-17", lat: 33.6745, lng: 72.8252, phone: "+92 303 5410444" },
-        { name: "GSP Northern Area (H-8)", lat: 33.6811, lng: 73.0722, phone: "+92 51 9278103" },
-        { name: "OEC Potohar Plaza (Blue Area)", lat: 33.7125, lng: 73.0635, phone: "+92 51 9219092" },
-        { name: "AKM Geotechnical Services", lat: 33.6000, lng: 73.0500, phone: "+92 321 5556990" },
-        { name: "NESPAK Geotech Division", lat: 33.6950, lng: 73.0450, phone: "+92 51 9260123" },
-        { name: "Soil Investigation Unit (H-9)", lat: 33.6650, lng: 73.0350, phone: "+92 51 9258245" },
-        { name: "Material Testing Lab (FWO)", lat: 33.5482, lng: 73.0321, phone: "+92 51 9278103" },
-        { name: "Simplified Engineering (Bahria)", lat: 33.5256, lng: 73.0984, phone: "+92 333 5152223" },
-        { name: "National Highway Authority Lab", lat: 33.6934, lng: 73.0345, phone: "+92 51 9260417" }
+        { name: "Soil Testing Services & Piling Works", lat: 33.5921, lng: 72.8768, phone: "0332-5573750 / 051-2323738", address: "House #21, Street 97, G-13/1, Islamabad" },
+        { name: "Geo Deep Rock",                        lat: 33.6496, lng: 72.9373, phone: "0300-3926433",                address: "Islamabad" },
+        { name: "Soil Testing Services Islamabad",      lat: 33.6437, lng: 72.9618, phone: "051-2323738",                address: "Islamabad" },
+        { name: "Victor Consulting Engineers",          lat: 33.6486, lng: 72.9686, phone: "0313-6193778 / 051-2768649", address: "Islamabad" },
+        { name: "BK Engineering",                       lat: 33.6751, lng: 73.0155, phone: "0333-4724366 / 051-2740011", address: "Office #8, Al-Kousar Plaza, G-10 Markaz, Islamabad" },
+        { name: "QWA Engineers",                        lat: 33.6457, lng: 73.0498, phone: "0343-6565197",                address: "Islamabad" },
+        { name: "GEOMATRIX Geotech & Research Lab",     lat: 33.6322, lng: 72.9853, phone: "0314-5095019",                address: "Noor Heights, Abdullah Garden, H-13, Islamabad" },
+        { name: "Productive Engineers",                 lat: 33.6318, lng: 72.9841, phone: "0334-5414718",                address: "Al-Rehman Arcade, Shams Colony, H-13, Islamabad" },
+        { name: "Geo Group of Companies",               lat: 33.6128, lng: 72.9761, phone: "0308-8528128",                address: "House 1874-C, 3 Double Road, I-14, Islamabad" },
+        { name: "Geoservices Engineering Consultants",  lat: 33.6042, lng: 72.9931, phone: "0333-3404585 / 051-5204186", address: "Officers Colony Lane 4, Friends Colony, Rawalpindi" },
+        { name: "GCS | Geo-Tech Consultancy Services",  lat: 33.6042, lng: 72.9931, phone: "051-5166789",                address: "Rawalpindi" },
+        { name: "Royal Geotech Company",                lat: 33.5966, lng: 73.0576, phone: "0300-5121223 / 051-512098",  address: "Poonch House, Adam Jee Rd, Saddar, Rawalpindi" },
+        { name: "Pak Engineers & Geotech Lab",          lat: 33.5671, lng: 73.0835, phone: "051-5406242 / 0321-5558101", address: "Ali Plaza, GT Road, New Morgah, Rawalpindi" },
+        { name: "GEOENGINEERS",                         lat: 33.6578, lng: 73.0962, phone: "0333-5272593",                address: "Islamabad" },
+        { name: "Global Geotech Material Testing Lab",  lat: 33.6520, lng: 73.1008, phone: "0344-5561532",                address: "Islamabad" },
+        { name: "Sultan Engineering Services Pakistan", lat: 33.6297, lng: 73.1418, phone: "0300-2295317",                address: "Islamabad" },
+        { name: "Foundation Design Engineers Lab",      lat: 33.5501, lng: 73.1709, phone: "0333-5668490",                address: "Islamabad" },
+        { name: "Center Testing Laboratory & Engg",     lat: 33.5203, lng: 73.1169, phone: "0345-4075876",                address: "Rawalpindi" },
+        { name: "Creative Soil Testing",                lat: 33.6374, lng: 72.9760, phone: "0304-9968729",                address: "Islamabad" },
+        { name: "Advance Soil Mat Lab GHQ",             lat: 33.5871, lng: 73.0827, phone: "0303-5821305 / 051-9270556", address: "GHQ, Rawalpindi" },
+        { name: "Land Survey & GeoTech Solutions",      lat: 33.6038, lng: 72.9962, phone: "0333-6936238",                address: "Islamabad" },
+        { name: "CWO Material Testing Laboratory",      lat: 33.6268, lng: 72.9643, phone: "051-2190412 / 0343-5590003", address: "Islamabad" },
+        { name: "NUST NICE Soil Lab",                   lat: 33.6408, lng: 72.9852, phone: "051-8864583",                address: "H-12, NUST Campus, Islamabad" },
+        { name: "UET Taxila Civil Engineering Dept",    lat: 33.7680, lng: 72.8201, phone: "051-9047639",                address: "UET Taxila, Rawalpindi" },
+        { name: "ACES Architectural & Civil Engg",      lat: 33.6878, lng: 72.9273, phone: "051-57073456",                address: "Islamabad" },
+        { name: "Geo Project Consultant",               lat: 33.5448, lng: 73.1869, phone: "051-5427141 / 0300-9757801", address: "Islamabad" },
+        { name: "Pearl GeoTech",                        lat: 33.6200, lng: 73.0500, phone: "0300-5381545",                address: "Islamabad" },
+        { name: "SWIS-TECH",                            lat: 33.6200, lng: 73.0100, phone: "051-5492983 / 0301-5100801", address: "Islamabad" },
+        { name: "NUTECH Civil Engineering Dept",        lat: 33.6262, lng: 73.0142, phone: "0343-4250926",                address: "NUTECH, Islamabad" },
+        { name: "CTTI (FWO) Material Testing Lab",      lat: 33.6298, lng: 73.0126, phone: "051-9278103 / 0321-5188624", address: "CTTI FWO, Islamabad" },
+        { name: "A.N Associates",                       lat: 33.5963, lng: 73.0565, phone: "051-5529849 / 0300-8554680", address: "Rafique Center, Adam Jee Rd, Saddar, Rawalpindi" },
+        { name: "Earth Face Engineering Services",      lat: 33.5252, lng: 73.1434, phone: "051-3015363 / 0321-5814514", address: "Nazak Plaza, GT Rd, Garden City, Islamabad" },
+        { name: "Geo Material Testing Lab",             lat: 33.5360, lng: 73.1731, phone: "0321-5881594",                address: "Plaza 70, Iqbal Blvd, Sector-D, DHA Ph-II, Islamabad" },
+        { name: "GeoCrust Lab",                         lat: 33.7036, lng: 72.9789, phone: "051-2223718 / 0308-2389028", address: "Farhan Arcade, E-11/3, Islamabad" },
+        { name: "Mamaar Engineering Expert",            lat: 33.5222, lng: 73.1480, phone: "0300-5368493",                address: "Lal Khan Plaza, GT Rd, Jeddah Town, Islamabad" },
+        { name: "Geo Solutions",                        lat: 33.5928, lng: 73.1203, phone: "0355-7509707",                address: "Lane 1, Wakeel Colony, Chaklala Cantt., Rawalpindi" },
+        { name: "EMAAN Engineering (SMC Pvt) Ltd",      lat: 33.6165, lng: 73.1379, phone: "0331-9590080",                address: "Mobile Plaza, Kalma Chowk, Phase 4A Ghauri Town, Islamabad" },
+        { name: "Comrades Planning & Design Consultants",lat: 33.5215, lng: 73.0899, phone: "0323-5000160 / 0324-5800036",address: "Chen One Mall, Bahria Expy, Phase 7, Bahria Town, Islamabad" },
+        { name: "Engineering Plus",                     lat: 33.7377, lng: 73.1039, phone: "051-8484252 / 0305-5252252", address: "Shahid Plaza, Marine Yard, D-Chowk, F-6, Islamabad" },
+        { name: "Alpha Engineering Consultants",        lat: 33.5282, lng: 73.0731, phone: "0334-5514737",                address: "CBD North Commercial, Phase 8, Bahria Town, Rawalpindi" },
+        { name: "NovaTech Engineering Solution",        lat: 33.6550, lng: 72.9072, phone: "0342-4755930",                address: "Ziarat Trade Center, GT Rd, Tarnol, Islamabad" },
+        { name: "RAGEC Road & Geo Engineering",         lat: 33.6440, lng: 72.9228, phone: "0347-9425428",                address: "Afzal Plaza, opp. Toyota GT Motor, Tarnol, Islamabad" }
     ];
 
     const map = L.map('map', {zoomControl: false}).setView([33.56, 73.15], 11);
     L.control.zoom({position: 'bottomright'}).addTo(map);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png', { 
-        attribution: '&copy; CARTO',
-        crossOrigin: 'anonymous' 
-    }).addTo(map);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; CARTO', crossOrigin: 'anonymous' }).addTo(map);
 
     const bhLayerGroup = L.layerGroup().addTo(map);
     boreholes.forEach(bh => {
+        const top = bh.layers[0] || {};
         const marker = L.circleMarker([bh.lat, bh.lng], { color: '#e67e22', radius: 7, weight: 2.5, fillOpacity: 1, fillColor: '#083d32' }).addTo(bhLayerGroup);
-        marker.bindPopup(`<div style="font-family:'Segoe UI'; font-size:12px; color:#333;"><b style="color:#e67e22;">${bh.name}</b><br>Fines: ${bh.fines}%<br>SPT: ${bh.nValue||'N/A'}</div>`);
+        marker.bindPopup(`<div style="font-family:'Segoe UI'; font-size:12px; color:#333;">
+            <b style="color:#e67e22;">${bh.name}</b><br>
+            Layers: ${bh.layers.length} &middot; Max depth: ${bh.layers[bh.layers.length-1]?.depthFt ?? '?'} ft<br>
+            Fines (top): ${top.fines ?? 'N/A'}% &nbsp; SPT (top): ${top.N ?? 'N/A'}
+        </div>`);
     });
 
     const labLayerGroup = L.layerGroup().addTo(map);
@@ -308,7 +1238,7 @@
 
     geotechnicalLabs.forEach(lab => {
         const labMarker = L.marker([lab.lat, lab.lng], { icon: pinIcon });
-        labMarker.bindPopup(`<div style="color:#333"><b style="color:#0d6b49;">${lab.name}</b><br>Phone: ${lab.phone}</div>`);
+        labMarker.bindPopup(`<div style="color:#333; font-family:'Segoe UI'; font-size:12px;"><b style="color:#0d6b49;">${lab.name}</b><br>${lab.address}<br>&#128222; ${lab.phone}</div>`);
         labMarker.addTo(labLayerGroup);
         labMarkers[lab.name] = labMarker;
     });
@@ -316,24 +1246,148 @@
     function togglePoints(visible) { visible ? map.addLayer(bhLayerGroup) : map.removeLayer(bhLayerGroup); }
     function toggleLabs(visible) {
         if (visible) {
-            geotechnicalLabs.forEach(lab => { if (!labLayerGroup.hasLayer(labMarkers[lab.name])) labLayerGroup.addLayer(labMarkers[lab.name]); });
+            geotechnicalLabs.forEach(lab => {
+                if (!labLayerGroup.hasLayer(labMarkers[lab.name])) labLayerGroup.addLayer(labMarkers[lab.name]);
+            });
         } else {
-            geotechnicalLabs.forEach(lab => { if (lab.name !== nearestLabName) labLayerGroup.removeLayer(labMarkers[lab.name]); });
+            geotechnicalLabs.forEach(lab => {
+                if (lab.name !== selectedLabName) labLayerGroup.removeLayer(labMarkers[lab.name]);
+            });
         }
     }
 
-    function setRandomPlaceholder() { 
-        const el = document.getElementById('input-name');
-        if (el) el.placeholder = "e.g. " + funSiteNames[Math.floor(Math.random() * funSiteNames.length)]; 
+    let selectedLabName = "";
+    let selectedLabDist = 0;
+    let allLabsSorted   = [];
+
+    function findNearestLab(siteLat, siteLng) {
+        let best = geotechnicalLabs[0], bestD = Infinity;
+        geotechnicalLabs.forEach(lab => {
+            const d = haversineKm(siteLat, siteLng, lab.lat, lab.lng);
+            if (d < bestD) { bestD = d; best = lab; }
+        });
+        return best;
     }
 
+    function buildLabListSorted(siteLat, siteLng) {
+        allLabsSorted = geotechnicalLabs.map(lab => ({
+            ...lab,
+            distKm: haversineKm(siteLat, siteLng, lab.lat, lab.lng)
+        })).sort((a, b) => a.distKm - b.distKm);
+    }
+
+    function renderLabList(filter = "") {
+        const container = document.getElementById('lab-list-container');
+        if (!container) return;
+        const filtered = filter
+            ? allLabsSorted.filter(l => l.name.toLowerCase().includes(filter.toLowerCase()))
+            : allLabsSorted;
+        container.innerHTML = filtered.map((lab, i) => {
+            const isNearest = lab.name === allLabsSorted[0].name;
+            const isSelected = lab.name === selectedLabName;
+            return `<div class="lab-list-item ${isSelected ? 'selected' : ''} ${isNearest && !filter ? 'nearest-badge' : ''}"
+                        onclick="selectLab('${lab.name.replace(/'/g,"\\'")}')">
+                <div>
+                    <div class="lab-item-name">${lab.name}</div>
+                    <div class="lab-item-phone">${lab.phone}</div>
+                </div>
+                <div class="lab-item-dist">${lab.distKm.toFixed(1)} km</div>
+            </div>`;
+        }).join('');
+    }
+
+    function filterLabList(val) { renderLabList(val); }
+
+    function selectLab(labName) {
+        const lab = allLabsSorted.find(l => l.name === labName);
+        if (!lab) return;
+        selectedLabName = lab.name;
+        selectedLabDist = lab.distKm;
+        renderLabList(document.getElementById('lab-search-input').value);
+
+        const mob = lab.distKm <= 20 ? rates.mob20 : rates.mob30;
+        document.getElementById('selected-lab-info').innerHTML =
+            `<b>&#128205; ${lab.name}</b>
+             ${lab.address}<br>
+             &#128222; ${lab.phone}<br>
+             Distance: <b style="color:#27ae60">${lab.distKm.toFixed(2)} km</b> &nbsp;&middot;&nbsp;
+             Mobilization: <b style="color:#e67e22">PKR ${mob.toLocaleString()}</b>`;
+
+        fetchRoadRoute(siteData.lat, siteData.lng, lab);
+        nearestLabName = lab.name;
+        toggleLabs(document.getElementById('labToggle').checked);
+        if (labMarkers[lab.name]) {
+            map.panTo([lab.lat, lab.lng]);
+            labMarkers[lab.name].openPopup();
+        }
+    }
+
+    function fetchRoadRoute(startLat, startLng, lab) {
+        if (!lab) lab = findNearestLab(startLat, startLng);
+        nearestLabName = lab.name;
+        toggleLabs(document.getElementById('labToggle').checked);
+        const url = `https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${lab.lng},${lab.lat}?overview=full&geometries=geojson`;
+        fetch(url).then(res => res.json()).then(data => {
+            if (data.routes && data.routes.length > 0) {
+                const roadDist = data.routes[0].distance / 1000;
+                if (routeLayer) map.removeLayer(routeLayer);
+                routeLayer = L.polyline(
+                    data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]),
+                    { color: '#e67e22', weight: 4.5, opacity: 0.9 }
+                ).addTo(map);
+                const mobCost = roadDist <= 20 ? rates.mob20 : rates.mob30;
+                updateReportWithRoute(roadDist, mobCost);
+                selectedLabDist = roadDist;
+
+                const mob = roadDist <= 20 ? rates.mob20 : rates.mob30;
+                const infoEl = document.getElementById('selected-lab-info');
+                if (infoEl) {
+                    infoEl.innerHTML =
+                        `<b>&#128205; ${lab.name}</b>
+                         ${lab.address}<br>
+                         &#128222; ${lab.phone}<br>
+                         Road distance: <b style="color:#27ae60">${roadDist.toFixed(2)} km</b> &nbsp;&middot;&nbsp;
+                         Mobilization: <b style="color:#e67e22">PKR ${mob.toLocaleString()}</b>`;
+                }
+            }
+        }).catch(() => {
+            const distKm = haversineKm(startLat, startLng, lab.lat, lab.lng);
+            const mobCost = distKm <= 20 ? rates.mob20 : rates.mob30;
+            updateReportWithRoute(distKm, mobCost);
+        });
+    }
+
+    function initLabSelector(siteLat, siteLng) {
+        buildLabListSorted(siteLat, siteLng);
+        const nearest = allLabsSorted[0];
+        selectedLabName = nearest.name;
+        selectedLabDist = nearest.distKm;
+        renderLabList();
+        const mob = nearest.distKm <= 20 ? rates.mob20 : rates.mob30;
+        const infoEl = document.getElementById('selected-lab-info');
+        if (infoEl) {
+            infoEl.innerHTML =
+                `<b>&#128205; ${nearest.name}</b>
+                 ${nearest.address}<br>
+                 &#128222; ${nearest.phone}<br>
+                 Straight-line: <b style="color:#27ae60">${nearest.distKm.toFixed(2)} km</b> &nbsp;&middot;&nbsp;
+                 Mobilization: <b style="color:#e67e22">PKR ${mob.toLocaleString()}</b>`;
+        }
+    }
+
+    function setRandomPlaceholder() { const el = document.getElementById('input-name'); if (el) el.placeholder = "e.g. " + funSiteNames[Math.floor(Math.random() * funSiteNames.length)]; }
+
     function showLocationOptions() {
+        const buildingType = document.getElementById('input-building-type').value;
+        if (!buildingType) return alert("Please select a building type (Residential or Commercial).");
         const nameInput = document.getElementById('input-name');
         siteData.name = nameInput.value || nameInput.placeholder.replace("e.g. ", "");
         siteData.len = parseFloat(document.getElementById('input-len').value);
         siteData.wid = parseFloat(document.getElementById('input-wid').value);
         siteData.stories = parseInt(document.getElementById('input-stories').value);
+        siteData.gwt = 999;
         siteData.drillType = document.getElementById('input-drill-type').value;
+        siteData.buildingType = buildingType;
         if(!siteData.len || !siteData.wid || !siteData.stories) return alert("Fill parameters.");
         document.getElementById('modal-params').style.display = 'none';
         document.getElementById('modal-location').style.display = 'block';
@@ -342,7 +1396,11 @@
     function resetForNewEstimate() {
         isRecalling = false; document.getElementById('modal-overlay').style.display = 'flex';
         document.getElementById('modal-params').style.display = 'block'; document.getElementById('modal-location').style.display = 'none';
-        document.getElementById('input-name').value = ""; if(routeLayer) map.removeLayer(routeLayer); nearestLabName = ""; setRandomPlaceholder();
+        document.getElementById('input-name').value = "";
+        document.getElementById('input-building-type').value = "";
+        document.getElementById('bt-note').style.display = 'none';
+        ['bt-residential','bt-commercial'].forEach(id => { const el = document.getElementById(id); if(el) el.classList.remove('selected'); });
+        if(routeLayer) map.removeLayer(routeLayer); nearestLabName = ""; setRandomPlaceholder();
     }
 
     function startMapSelection() { document.getElementById('modal-overlay').style.display = 'none'; isSelecting = true; }
@@ -355,76 +1413,599 @@
         generateReport();
     }
 
-    map.on('click', function(e) {
-        if (!isSelecting) return;
-        siteData.lat = e.latlng.lat; siteData.lng = e.latlng.lng;
-        isSelecting = false; generateReport();
-    });
+    map.on('click', function(e) { if (!isSelecting) return; siteData.lat = e.latlng.lat; siteData.lng = e.latlng.lng; isSelecting = false; generateReport(); });
 
-    function calculateIDW(lat, lng, key) {
-        const vp = boreholes.filter(bh => bh[key] !== null);
-        if (vp.length === 0) return 0;
-        let wSum = 0, wvSum = 0;
-        vp.forEach(bh => { let d = Math.max(Math.sqrt(Math.pow(lat - bh.lat, 2) + Math.pow(lng - bh.lng, 2)), 0.0001); let w = 1 / Math.pow(d, 2); wSum += w; wvSum += (w * bh[key]); });
-        return (wvSum / wSum);
+    function haversineKm(lat1, lng1, lat2, lng2) {
+        const R = 6371, toRad = Math.PI / 180;
+        const dLat = (lat2 - lat1) * toRad;
+        const dLng = (lng2 - lng1) * toRad;
+        const a = Math.sin(dLat/2)**2 + Math.cos(lat1*toRad) * Math.cos(lat2*toRad) * Math.sin(dLng/2)**2;
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 
-    function fetchRoadRoute(startLat, startLng) {
-        let nearestLab = geotechnicalLabs[0]; let minDist = Infinity;
-        geotechnicalLabs.forEach(lab => { const d = Math.sqrt(Math.pow(startLat - lab.lat, 2) + Math.pow(startLng - lab.lng, 2)); if (d < minDist) { minDist = d; nearestLab = lab; } });
-        nearestLabName = nearestLab.name; toggleLabs(document.getElementById('labToggle').checked);
-        const url = `https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${nearestLab.lng},${nearestLab.lat}?overview=full&geometries=geojson`;
-        fetch(url).then(res => res.json()).then(data => {
-            if (data.routes && data.routes.length > 0) {
-                const roadDist = data.routes[0].distance / 1000;
-                if (routeLayer) map.removeLayer(routeLayer);
-                routeLayer = L.polyline(coords = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]), { color: '#e67e22', weight: 4.5, opacity: 0.9 }).addTo(map);
-                const mobCost = roadDist <= 20 ? 20000 : 30000; updateReportWithRoute(roadDist, mobCost);
+    function sphericalVariogram(h, nugget, sill, range) {
+        if (h <= 0) return 0;
+        if (h >= range) return nugget + sill;
+        const r = h / range;
+        return nugget + sill * (1.5 * r - 0.5 * r * r * r);
+    }
+
+    function sampleVariance(pts) {
+        const n = pts.length;
+        if (n < 2) return 1;
+        const mean = pts.reduce((s, p) => s + p.v, 0) / n;
+        return pts.reduce((s, p) => s + Math.pow(p.v - mean, 2), 0) / (n - 1);
+    }
+
+    function experimentalVariogram(pts, nBins) {
+        const n = pts.length;
+        const pairs = [];
+        let maxDist = 0;
+
+        for (let i = 0; i < n; i++) {
+            for (let j = i + 1; j < n; j++) {
+                const h = haversineKm(pts[i].lat, pts[i].lng, pts[j].lat, pts[j].lng);
+                const sv = 0.5 * Math.pow(pts[i].v - pts[j].v, 2);
+                pairs.push({ h, sv });
+                if (h > maxDist) maxDist = h;
             }
-        });
+        }
+
+        if (pairs.length === 0 || maxDist === 0) return { bins: [], maxDist: 1 };
+
+        const maxLag  = maxDist * 0.60;
+        const numBins = Math.max(4, Math.min(nBins, Math.floor(pairs.length / 2)));
+        const lagW    = maxLag / numBins;
+
+        const bins = [];
+        for (let b = 0; b < numBins; b++) {
+            const lo = b * lagW;
+            const hi = (b + 1) * lagW;
+            const inBin = pairs.filter(p => p.h >= lo && p.h < hi);
+            if (inBin.length >= 2) {
+                const hMean  = inBin.reduce((s, p) => s + p.h,  0) / inBin.length;
+                const gMean  = inBin.reduce((s, p) => s + p.sv, 0) / inBin.length;
+                bins.push({ h: hMean, gamma: gMean, count: inBin.length });
+            }
+        }
+        return { bins, maxDist };
+    }
+
+    function wlsObjective(bins, nugget, sill, range) {
+        if (nugget < 0 || sill <= 0 || range <= 0) return 1e18;
+        return bins.reduce((sum, pt) => {
+            const model = sphericalVariogram(pt.h, nugget, sill, range);
+            return sum + pt.count * Math.pow(pt.gamma - model, 2);
+        }, 0);
+    }
+
+    function nelderMead(fn, x0, maxIter) {
+        const n  = x0.length;
+        const alpha = 1.0, gamma = 2.0, rho = 0.5, sigma = 0.5;
+
+        const simplex = [x0.slice()];
+        for (let i = 0; i < n; i++) {
+            const x = x0.slice();
+            x[i] = x[i] !== 0 ? x[i] * 1.1 : 0.001;
+            simplex.push(x);
+        }
+
+        for (let iter = 0; iter < maxIter; iter++) {
+            simplex.sort((a, b) => fn(a) - fn(b));
+            if (Math.abs(fn(simplex[n]) - fn(simplex[0])) < 1e-12) break;
+
+            const xo = new Array(n).fill(0);
+            for (let i = 0; i < n; i++)
+                for (let d = 0; d < n; d++) xo[d] += simplex[i][d] / n;
+
+            const xr = xo.map((c, d) => c + alpha * (c - simplex[n][d]));
+            const fr = fn(xr);
+
+            if (fr < fn(simplex[0])) {
+                const xe = xo.map((c, d) => c + gamma * (xr[d] - c));
+                simplex[n] = fn(xe) < fr ? xe : xr;
+            } else if (fr < fn(simplex[n - 1])) {
+                simplex[n] = xr;
+            } else {
+                const xc = xo.map((c, d) => c + rho * (simplex[n][d] - c));
+                if (fn(xc) < fn(simplex[n])) {
+                    simplex[n] = xc;
+                } else {
+                    for (let i = 1; i <= n; i++)
+                        simplex[i] = simplex[i].map((v, d) =>
+                            simplex[0][d] + sigma * (v - simplex[0][d]));
+                }
+            }
+        }
+        simplex.sort((a, b) => fn(a) - fn(b));
+        return simplex[0];
+    }
+
+    function fitVariogram(pts) {
+        const n = pts.length;
+        if (n < 3) {
+            const v = sampleVariance(pts);
+            return { nugget: 0, sill: v, range: 1, bins: [], fitted: false };
+        }
+
+        const { bins, maxDist } = experimentalVariogram(pts, 10);
+        if (bins.length < 3) {
+            const v = sampleVariance(pts);
+            return { nugget: v * 0.05, sill: v * 0.95, range: maxDist * 0.4, bins, fitted: false };
+        }
+
+        const nugget0 = Math.max(0, bins[0].gamma * 0.5);
+        const totalSill = bins[bins.length - 1].gamma;
+        const sill0 = Math.max(0.001, totalSill - nugget0);
+        const range0 = Math.max(0.05, maxDist * 0.35);
+
+        let bestParams = [nugget0, sill0, range0];
+        let bestObj = wlsObjective(bins, nugget0, sill0, range0);
+
+        const nuggetFracs = [0, 0.05, 0.10, 0.20, 0.30];
+        const rangeFracs  = [0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70];
+
+        for (const nf of nuggetFracs) {
+            const c0 = totalSill * nf;
+            const c1 = Math.max(0.001, totalSill - c0);
+            for (const rf of rangeFracs) {
+                const a = maxDist * rf;
+                const obj = wlsObjective(bins, c0, c1, a);
+                if (obj < bestObj) { bestObj = obj; bestParams = [c0, c1, a]; }
+            }
+        }
+
+        const fn = (p) => wlsObjective(bins, Math.max(0, p[0]), Math.max(0.001, p[1]), Math.max(0.01, p[2]));
+        const refined = nelderMead(fn, bestParams, 300);
+
+        const nugget = Math.max(0,      refined[0]);
+        const sill   = Math.max(0.001, refined[1]);
+        const range  = Math.max(0.01,  refined[2]);
+
+        return { nugget, sill, range, bins, fitted: true };
+    }
+
+    function gaussianElimination(A, b) {
+        const n = b.length;
+        for (let col = 0; col < n; col++) {
+            let maxRow = col;
+            for (let row = col + 1; row < n; row++)
+                if (Math.abs(A[row][col]) > Math.abs(A[maxRow][col])) maxRow = row;
+            [A[col], A[maxRow]] = [A[maxRow], A[col]];
+            [b[col], b[maxRow]] = [b[maxRow], b[col]];
+            if (Math.abs(A[col][col]) < 1e-12) continue;
+            for (let row = col + 1; row < n; row++) {
+                const factor = A[row][col] / A[col][col];
+                for (let k = col; k < n; k++) A[row][k] -= factor * A[col][k];
+                b[row] -= factor * b[col];
+            }
+        }
+        const x = new Array(n).fill(0);
+        for (let i = n - 1; i >= 0; i--) {
+            x[i] = b[i];
+            for (let j = i + 1; j < n; j++) x[i] -= A[i][j] * x[j];
+            x[i] /= (Math.abs(A[i][i]) < 1e-12 ? 1e-12 : A[i][i]);
+        }
+        return x;
+    }
+
+    function calculateKriging(lat, lng, key) {
+        const pts = boreholes
+            .filter(bh => bh[key] !== null && bh[key] !== undefined)
+            .map(bh => ({ lat: bh.lat, lng: bh.lng, v: bh[key] }));
+
+        if (pts.length === 0) return 0;
+        if (pts.length < 3) {
+            let best = pts[0], bestD = Infinity;
+            pts.forEach(p => { const d = haversineKm(lat, lng, p.lat, p.lng); if (d < bestD) { bestD = d; best = p; } });
+            return best.v;
+        }
+
+        const { nugget, sill, range } = fitVariogram(pts);
+        const n = pts.length;
+
+        const C = Array.from({ length: n + 1 }, () => new Array(n + 1).fill(0));
+        for (let i = 0; i < n; i++) {
+            for (let j = 0; j < n; j++) {
+                const h = haversineKm(pts[i].lat, pts[i].lng, pts[j].lat, pts[j].lng);
+                C[i][j] = sphericalVariogram(h, nugget, sill, range);
+            }
+            C[i][n] = 1; C[n][i] = 1;
+        }
+        C[n][n] = 0;
+
+        const c = new Array(n + 1).fill(0);
+        for (let i = 0; i < n; i++) {
+            const h = haversineKm(lat, lng, pts[i].lat, pts[i].lng);
+            c[i] = sphericalVariogram(h, nugget, sill, range);
+        }
+        c[n] = 1;
+
+        const Acopy = C.map(row => [...row]);
+        const weights = gaussianElimination(Acopy, c);
+
+        let estimate = 0;
+        for (let i = 0; i < n; i++) estimate += weights[i] * pts[i].v;
+
+        const minV = Math.min(...pts.map(p => p.v));
+        const maxV = Math.max(...pts.map(p => p.v));
+        return Math.max(minV, Math.min(maxV, estimate));
+    }
+
+    function getBoreholeValueAtDepth(bh, depthFt, key) {
+        if (!bh.layers || bh.layers.length === 0) return null;
+        let best = null, bestDiff = Infinity;
+        for (const layer of bh.layers) {
+            const diff = Math.abs(layer.depthFt - depthFt);
+            if (diff < bestDiff && diff <= 10) { bestDiff = diff; best = layer; }
+        }
+        if (!best) return null;
+        const v = best[key];
+        return (v === null || v === undefined) ? null : v;
+    }
+
+    function krigAtDepth(siteLat, siteLng, depthFt, key) {
+        const pts = [];
+        for (const bh of boreholes) {
+            const v = getBoreholeValueAtDepth(bh, depthFt, key);
+            if (v !== null && v !== -1) pts.push({ lat: bh.lat, lng: bh.lng, v });
+        }
+        if (pts.length === 0) return null;
+        if (pts.length < 3) {
+            let best = pts[0], bestD = Infinity;
+            pts.forEach(p => { const d = haversineKm(siteLat, siteLng, p.lat, p.lng); if (d < bestD) { bestD = d; best = p; } });
+            return best.v;
+        }
+        const { nugget, sill, range } = fitVariogram(pts);
+        const n = pts.length;
+        const C = Array.from({ length: n+1 }, () => new Array(n+1).fill(0));
+        for (let i = 0; i < n; i++) {
+            for (let j = 0; j < n; j++) {
+                const h = haversineKm(pts[i].lat, pts[i].lng, pts[j].lat, pts[j].lng);
+                C[i][j] = sphericalVariogram(h, nugget, sill, range);
+            }
+            C[i][n] = 1; C[n][i] = 1;
+        }
+        const c = new Array(n+1).fill(0);
+        for (let i = 0; i < n; i++) {
+            const h = haversineKm(siteLat, siteLng, pts[i].lat, pts[i].lng);
+            c[i] = sphericalVariogram(h, nugget, sill, range);
+        }
+        c[n] = 1;
+        const Ac = C.map(r => [...r]);
+        const w = gaussianElimination(Ac, c);
+        let est = 0;
+        for (let i = 0; i < n; i++) est += w[i] * pts[i].v;
+        const minV = Math.min(...pts.map(p => p.v));
+        const maxV = Math.max(...pts.map(p => p.v));
+        return Math.max(minV, Math.min(maxV, est));
+    }
+
+    function classifyUSCS(gravel, sand, fines, LL, PI, isRock) {
+        if (isRock) return { symbol:"ROCK", name:"Rock / Shale", texture:"Rock", color:"#922B21" };
+        const f  = (fines  !== null && fines  !== undefined) ? fines  : null;
+        const g  = (gravel !== null && gravel !== undefined) ? gravel : null;
+        const s  = (sand   !== null && sand   !== undefined) ? sand   : null;
+        const ll = (LL     !== null && LL     !== undefined) ? LL     : null;
+        const pi = (PI     !== null && PI     !== undefined) ? PI     : null;
+
+        if (f === null && g === null && s === null) {
+            if (ll !== null && pi !== null) {
+                const aLine = 0.73 * (ll - 20);
+                if (ll < 50) return pi >= aLine ? {symbol:"CL",name:"Lean Clay",         texture:"Fine",   color:"#8B5E3C"} : {symbol:"ML",name:"Silt (Low Plasticity)", texture:"Fine",  color:"#A0856B"};
+                else         return pi >= aLine ? {symbol:"CH",name:"Fat Clay",          texture:"Fine",   color:"#6B3A2A"} : {symbol:"MH",name:"Elastic Silt",          texture:"Fine",  color:"#8B6B55"};
+            }
+            return {symbol:"??", name:"Insufficient Data", texture:"Unknown", color:"#444"};
+        }
+
+        if (f !== null && f < 50) {
+            const coarse = (g||0) + (s||0);
+            const gravelFrac = coarse > 0 ? (g||0) / coarse * 100 : 0;
+            const isGravel = gravelFrac > 50;
+
+            if (isGravel) {
+                if (f < 5)       return {symbol:"GW/GP", name:"Well/Poorly Graded Gravel", texture:"Gravel", color:"#7D6608"};
+                if (f >= 5 && f <= 12) return {symbol:"GM/GC", name:"Silty/Clayey Gravel", texture:"Gravel", color:"#9A7D0A"};
+                if (pi !== null) {
+                    const aLine = 0.73 * (ll - 20);
+                    return pi >= aLine ? {symbol:"GC",name:"Clayey Gravel",   texture:"Gravel",color:"#B7950B"}
+                                       : {symbol:"GM",name:"Silty Gravel",    texture:"Gravel",color:"#D4AC0D"};
+                }
+                return {symbol:"GC/GM",name:"Clayey/Silty Gravel",texture:"Gravel",color:"#B7950B"};
+            } else {
+                if (f < 5)       return {symbol:"SW/SP", name:"Well/Poorly Graded Sand",   texture:"Sand",   color:"#D4AC0D"};
+                if (f >= 5 && f <= 12) return {symbol:"SM/SC", name:"Silty/Clayey Sand",    texture:"Sand",   color:"#E5BE50"};
+                if (pi !== null && ll !== null) {
+                    const aLine = 0.73 * (ll - 20);
+                    return pi >= aLine ? {symbol:"SC",name:"Clayey Sand",     texture:"Sand",  color:"#F0C060"}
+                                       : {symbol:"SM",name:"Silty Sand",      texture:"Sand",  color:"#F5D070"};
+                }
+                return {symbol:"SC/SM",name:"Clayey/Silty Sand",  texture:"Sand",  color:"#E5BE50"};
+            }
+        }
+
+        if (f !== null && f >= 50) {
+            if (ll === null || pi === null) {
+                return {symbol:"CL/ML",name:"Clay or Silt (Atterberg N/A)",texture:"Fine",color:"#8B6B55"};
+            }
+            const aLine = 0.73 * (ll - 20);
+            const aboveA = pi >= aLine;
+            if (ll < 50) {
+                return aboveA ? {symbol:"CL",  name:"Lean Clay",             texture:"Fine", color:"#8B5E3C"}
+                               : {symbol:"ML",  name:"Silt (Low Plasticity)",texture:"Fine", color:"#A0856B"};
+            } else {
+                return aboveA ? {symbol:"CH",  name:"Fat Clay",               texture:"Fine", color:"#6B3A2A"}
+                               : {symbol:"MH",  name:"Elastic Silt",          texture:"Fine", color:"#8B6B55"};
+            }
+        }
+
+        if (ll !== null && pi !== null) {
+            const aLine = 0.73 * (ll - 20);
+            return pi >= aLine ? {symbol:"CL",name:"Lean Clay (borderline)",texture:"Fine",color:"#8B5E3C"}
+                               : {symbol:"ML",name:"Silt (borderline)",     texture:"Fine",color:"#A0856B"};
+        }
+        return {symbol:"CL/ML",name:"Clay-Silt (borderline)",texture:"Fine",color:"#8B6B55"};
+    }
+
+    function predictRockDepth(siteLat, siteLng) {
+        const rockBHs = boreholes.filter(bh => bh.rockDepthFt !== null);
+        if (rockBHs.length === 0) return null;
+
+        let nearest = null, nearestDist = Infinity;
+        for (const bh of rockBHs) {
+            const d = haversineKm(siteLat, siteLng, bh.lat, bh.lng);
+            if (d < nearestDist) { nearestDist = d; nearest = bh; }
+        }
+
+        const ROCK_INFLUENCE_KM = 15;
+        if (nearestDist > ROCK_INFLUENCE_KM) return null;
+
+        const scaledDepth = nearest.rockDepthFt * (1 + nearestDist / 20);
+        return {
+            depthFt:    Math.round(scaledDepth),
+            sourceName: nearest.name,
+            distKm:     nearestDist.toFixed(1),
+            sourceDepth: nearest.rockDepthFt,
+            confidence: nearestDist < 3  ? "HIGH"
+                      : nearestDist < 8  ? "MODERATE"
+                      : "LOW"
+        };
+    }
+
+    function renderRockWarning(rockPred, requiredDepthFt, bhCount, rates) {
+        const el = document.getElementById('rock-warning');
+        const body = document.getElementById('rock-warning-body');
+        if (!rockPred || rockPred.depthFt >= requiredDepthFt) {
+            el.style.display = 'none';
+            return;
+        }
+
+        el.style.display = 'block';
+        const soilDepth   = rockPred.depthFt;
+
+        body.innerHTML = `
+            <div style="margin-bottom:10px;">
+                Based on nearest borehole data (<b>${rockPred.sourceName}</b>, ${rockPred.distKm} km away),
+                a <b>rock / shale layer</b> may be encountered at approximately
+                <b style="color:#e74c3c;">${soilDepth} ft</b> depth.
+                Your originally required bore depth was <b>${requiredDepthFt} ft</b>.
+            </div>
+            <div style="font-size:11px; color:#a8c7c1; margin-bottom:10px;">
+                Prediction confidence: <b style="color:${rockPred.confidence==='HIGH'?'#27ae60':rockPred.confidence==='MODERATE'?'#e67e22':'#e74c3c'}">${rockPred.confidence}</b>
+                &nbsp;&middot;&nbsp; Source rock depth: ${rockPred.sourceDepth} ft
+                &nbsp;&middot;&nbsp; Method: Nearest-neighbour
+            </div>
+            <div style="font-size:11px; margin-bottom:4px; padding:8px 10px; background:rgba(255,255,255,0.04); border-radius:5px;">
+                <b>Action -- Coring 3m (10 ft) into rock</b><br>
+                Standard rotary drilling stops at rock surface. Diamond core drilling is applied for exactly 3m (10 ft) into the rock layer.<br>
+                The total depth and cost estimates above have been automatically adjusted to include this coring at PKR 5,000/ft and <b>only one UCS (Rock) test</b> per borehole.
+            </div>
+        `;
+    }
+    
+    function buildSoilProfile(siteLat, siteLng, depthFt) {
+        const interval = 5;
+        const layers   = [];
+        const rockPred = predictRockDepth(siteLat, siteLng);
+
+        for (let d = interval; d <= depthFt; d += interval) {
+            const isRock = rockPred && d >= rockPred.depthFt;
+
+            const gravel = isRock ? null : krigAtDepth(siteLat, siteLng, d, 'gravel');
+            const sand   = isRock ? null : krigAtDepth(siteLat, siteLng, d, 'sand');
+            const fines  = isRock ? null : krigAtDepth(siteLat, siteLng, d, 'fines');
+            const LL     = isRock ? null : krigAtDepth(siteLat, siteLng, d, 'LL');
+            const PL     = isRock ? null : krigAtDepth(siteLat, siteLng, d, 'PL');
+            const PI     = isRock ? null : krigAtDepth(siteLat, siteLng, d, 'PI');
+            const N      = isRock ? null : krigAtDepth(siteLat, siteLng, d, 'N');
+            const uscs   = classifyUSCS(gravel, sand, fines, LL, PI, isRock);
+
+            layers.push({
+                depthFt: d,
+                gravel:  gravel !== null ? gravel.toFixed(1) : null,
+                sand:    sand   !== null ? sand.toFixed(1)   : null,
+                fines:   fines  !== null ? fines.toFixed(1)  : null,
+                LL:      LL     !== null ? LL.toFixed(1)     : null,
+                PL:      PL     !== null ? PL.toFixed(1)     : null,
+                PI:      PI     !== null ? PI.toFixed(1)     : null,
+                N:       N      !== null ? N.toFixed(1)      : null,
+                isRock,
+                uscs
+            });
+        }
+        return layers;
+    }
+
+    function calcLabCost(soilProfile, depthFt, gwt) {
+        const zones = [];
+        for (let i = 0; i < soilProfile.length; i++) {
+            const l = soilProfile[i];
+            const sym = l.isRock ? 'ROCK' : l.uscs.symbol;
+            const last = zones[zones.length - 1];
+            if (last && last.sym === sym) {
+                last.layers.push(l);
+            } else {
+                zones.push({ sym, layers: [l] });
+            }
+        }
+
+        let labTotal  = 0;
+        let chemTotal = 0;
+        let hasRock   = false;
+
+        for (const zone of zones) {
+            const zoneThicknessFt = zone.layers.length * 5;
+            const samplesInZone   = zoneThicknessFt > 25 ? 2 : 1;
+            for (let s = 0; s < samplesInZone; s++) {
+                const l = zone.layers[s];
+                const sampleDepth = l.depthFt;
+
+                if (l.isRock) {
+                    hasRock = true;
+                    continue;
+                }
+
+                const finesVal  = l.fines  != null ? parseFloat(l.fines)  : 50;
+                const gravelVal = l.gravel != null ? parseFloat(l.gravel) : 0;
+                const sandVal   = l.sand   != null ? parseFloat(l.sand)   : 0;
+                const coarseSum = gravelVal + sandVal;
+                const isGravely = finesVal < 50 && coarseSum > 0 && (gravelVal / coarseSum) > 0.5;
+                const isSandy   = finesVal < 50 && !isGravely;
+                const isClay    = finesVal >= 50;
+                const belowGWT  = sampleDepth > gwt;
+
+                labTotal += rates.sieve;
+                labTotal += rates.moisture;
+                labTotal += rates.specgrav;
+                if (finesVal > 10) labTotal += rates.hydro;
+                if (isClay)        labTotal += rates.atterberg;
+                if (isClay)        labTotal += rates.ucs_soil;
+                if (!isGravely)    labTotal += rates.directshear;
+                if (isClay && belowGWT) labTotal += rates.consol;
+            }
+        }
+
+        if (hasRock) {
+            labTotal += rates.ucs_rock;
+        }
+
+        if (depthFt > 50) {
+            chemTotal = rates.sulphate + rates.chloride;
+        }
+
+        return { lab: labTotal, chemical: chemTotal };
+    }
+
+    function sowersDepthFt(stories) {
+        return Math.ceil(6 * Math.pow(stories, 0.7) * 3.281);
     }
 
     function generateReport() {
-        const spt = calculateIDW(siteData.lat, siteData.lng, 'nValue') || 15;
-        const fines = calculateIDW(siteData.lat, siteData.lng, 'fines') || 40;
-        
-        // REPLACED Stories * 10 with Sowers and Sowers (1970) Formula: 3 * S^0.7
-        const depth = (3 * Math.pow(siteData.stories, 0.7)).toFixed(2);
-        
-        const count = Math.ceil(siteData.len / 25) * Math.ceil(siteData.wid / 25);
-        const drillCost = depth * count * 2000, sptCost = depth * count * 1000, labCost = (depth / 5) * count * 3 * 1000;
-        renderReportUI(siteData.name, count, depth, spt, fines, drillCost, sptCost, labCost);
+        const requiredDepthFt = sowersDepthFt(siteData.stories);
+        const rockPred = predictRockDepth(siteData.lat, siteData.lng);
+        let soilDepthFt = requiredDepthFt;
+        let rockDepthFt = 0;
+        let depthFt = requiredDepthFt;
+
+        if (rockPred && rockPred.depthFt < requiredDepthFt) {
+            soilDepthFt = rockPred.depthFt;
+            rockDepthFt = 10;
+            depthFt = soilDepthFt + rockDepthFt;
+        }
+
+        const colsRaw    = Math.ceil(siteData.len / 82.02);
+        const rowsRaw    = Math.ceil(siteData.wid  / 82.02);
+        const bhCount    = colsRaw * rowsRaw;
+        const gwt        = siteData.gwt || 999;
+        const sptTests   = Math.floor(soilDepthFt / 3);
+        const sptCost    = sptTests * bhCount * rates.spt;
+        const drillCost  = (soilDepthFt * rates.drill + rockDepthFt * 5000) * bhCount;
+        const soilProfile = buildSoilProfile(siteData.lat, siteData.lng, depthFt);
+        const labResult   = calcLabCost(soilProfile, depthFt, gwt);
+        const labCost     = labResult.lab      * bhCount;
+        const chemCost    = labResult.chemical;
+        renderReportUI(siteData.name, bhCount, depthFt, drillCost, sptCost, labCost, chemCost, soilProfile, requiredDepthFt);
+        renderSampleSummary(soilProfile, depthFt);
         if (currentMarker) map.removeLayer(currentMarker);
         currentMarker = L.marker([siteData.lat, siteData.lng], {icon: L.icon({iconUrl: 'https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-orange.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34]})}).addTo(map).bindPopup(siteData.name).openPopup();
         map.setView([siteData.lat, siteData.lng], 15);
-        drawLayoutDiagram(Math.ceil(siteData.len / 25), Math.ceil(siteData.wid / 25));
-        fetchRoadRoute(siteData.lat, siteData.lng);
+        drawLayoutDiagram(colsRaw, rowsRaw);
+        initLabSelector(siteData.lat, siteData.lng);
+        fetchRoadRoute(siteData.lat, siteData.lng, null);
     }
 
     function updateReportWithRoute(dist, mobCost) {
-        const count = Math.ceil(siteData.len / 25) * Math.ceil(siteData.wid / 25);
-        const stories = siteData.stories;
-        const depth = (3 * Math.pow(stories, 0.7)).toFixed(2);
-        const drillCost = depth * count * 2000, sptCost = depth * count * 1000, labCost = (depth / 5) * count * 3 * 1000;
-        const total = drillCost + sptCost + labCost + 30000 + mobCost;
-        document.getElementById('rep-route-dist').innerText = dist.toFixed(2) + " KM";
-        document.getElementById('cost-mob').innerText = Math.round(mobCost).toLocaleString();
-        document.getElementById('cost-grand').innerText = "TOTAL: PKR " + Math.round(total).toLocaleString();
-        if (!isRecalling) { let hist = JSON.parse(sessionStorage.getItem('geoSessionHistory') || '[]'); hist.unshift({ ...siteData, total, depth, date: new Date().toLocaleString() }); sessionStorage.setItem('geoSessionHistory', JSON.stringify(hist)); }
+        const requiredDepthFt = sowersDepthFt(siteData.stories);
+        const rockPred = predictRockDepth(siteData.lat, siteData.lng);
+        let soilDepthFt = requiredDepthFt;
+        let rockDepthFt = 0;
+        let depthFt = requiredDepthFt;
+
+        if (rockPred && rockPred.depthFt < requiredDepthFt) {
+            soilDepthFt = rockPred.depthFt;
+            rockDepthFt = 10;
+            depthFt = soilDepthFt + rockDepthFt;
+        }
+
+        const bhCount    = Math.ceil(siteData.len / 82.02) * Math.ceil(siteData.wid / 82.02);
+        const gwt        = siteData.gwt || 999;
+        const sptTests   = Math.floor(soilDepthFt / 3);
+        const sptCost    = sptTests * bhCount * rates.spt;
+        const drillCost  = (soilDepthFt * rates.drill + rockDepthFt * 5000) * bhCount;
+        const soilProfile = buildSoilProfile(siteData.lat, siteData.lng, depthFt);
+        const labResult   = calcLabCost(soilProfile, depthFt, gwt);
+        const labCost     = labResult.lab      * bhCount;
+        const chemCost    = labResult.chemical;
+        const total = drillCost + sptCost + labCost + chemCost + getReportFee() + mobCost;
+        document.getElementById('rep-route-dist').innerText  = dist.toFixed(2) + ' KM';
+        document.getElementById('cost-mob').innerText        = Math.round(mobCost).toLocaleString();
+        document.getElementById('cost-spt').innerText        = Math.round(sptCost).toLocaleString();
+        document.getElementById('cost-report-fee').innerText = getReportFee().toLocaleString();
+        const chemRow = document.getElementById('row-chemical');
+        if (chemRow) chemRow.style.display = chemCost > 0 ? 'flex' : 'none';
+        const chemEl = document.getElementById('cost-chemical');
+        if (chemEl) chemEl.innerText = Math.round(chemCost).toLocaleString();
+        document.getElementById('cost-grand').innerText = 'TOTAL: PKR ' + Math.round(total).toLocaleString();
+        updateResidentialNote();
+        
+        document.getElementById('rep-depth').innerText = depthFt + ' ft';
+        document.getElementById('rep-samples').innerText = Math.ceil(depthFt / 5);
+        renderRockWarning(rockPred, requiredDepthFt, bhCount, rates);
+
+        if (!isRecalling) {
+            let hist = JSON.parse(sessionStorage.getItem('geoSessionHistory') || '[]');
+            hist.unshift({ ...siteData, total, depthFt, date: new Date().toLocaleString() });
+            sessionStorage.setItem('geoSessionHistory', JSON.stringify(hist));
+        }
         renderHistoryUI();
     }
 
-    function renderReportUI(name, count, depth, spt, fines, dc, sc, lc) {
-        document.getElementById('rep-site-title').innerText = name; document.getElementById('report-content').style.display = 'block';
-        document.getElementById('rep-bh-count').innerText = count; 
-        document.getElementById('rep-depth').innerText = depth + " m"; // Unit updated to meters
-        document.getElementById('rep-samples').innerText = Math.ceil(depth/1.5); // Sampling typically every 1.5m
-        document.getElementById('rep-spt-val').innerText = parseFloat(spt).toFixed(2);
-        document.getElementById('rep-plan-dims').innerText = `L: ${siteData.len}m | W: ${siteData.wid}m`;
-        document.getElementById('rep-test-list').innerHTML = `<b>Soil Profile:</b> ${fines > 50 ? 'Fine' : 'Coarse'}<br>Sieve, Moisture, Atterberg, UCS`;
-        document.getElementById('cost-drill').innerText = Math.round(dc).toLocaleString(); 
-        document.getElementById('cost-spt').innerText = Math.round(sc).toLocaleString();
-        document.getElementById('cost-lab').innerText = Math.round(lc).toLocaleString();
+    function renderReportUI(name, bhCount, depthFt, dc, sc, lc, cc, soilProfile, requiredDepthFt) {
+        document.getElementById('rep-site-title').innerText  = name;
+        document.getElementById('report-content').style.display = 'block';
+        document.getElementById('rep-bh-count').innerText   = bhCount;
+        document.getElementById('rep-depth').innerText      = depthFt + ' ft';
+        document.getElementById('rep-samples').innerText    = Math.ceil(depthFt / 5);
+        document.getElementById('rep-plan-dims').innerText  = siteData.len + 'ft x ' + siteData.wid + 'ft  |  Area: ' + (siteData.len * siteData.wid).toLocaleString() + ' sq ft';
+        const rockPred = predictRockDepth(siteData.lat, siteData.lng);
+        renderRockWarning(rockPred, requiredDepthFt, bhCount, rates);
+        document.getElementById('cost-drill').innerText     = Math.round(dc).toLocaleString();
+        document.getElementById('cost-spt').innerText       = Math.round(sc).toLocaleString();
+        document.getElementById('cost-lab').innerText       = Math.round(lc).toLocaleString();
+        document.getElementById('cost-report-fee').innerText = getReportFee().toLocaleString();
+        const chemRow = document.getElementById('row-chemical');
+        if (chemRow) chemRow.style.display = cc > 0 ? 'flex' : 'none';
+        const chemEl = document.getElementById('cost-chemical');
+        if (chemEl) chemEl.innerText = Math.round(cc).toLocaleString();
+
+        const nearestLab = findNearestLab(siteData.lat, siteData.lng);
+        const straightDist = haversineKm(siteData.lat, siteData.lng, nearestLab.lat, nearestLab.lng);
+        const initMob = straightDist <= 20 ? rates.mob20 : rates.mob30;
+        const initTotal = dc + sc + lc + cc + getReportFee() + initMob;
+        document.getElementById('cost-mob').innerText = initMob.toLocaleString();
+        document.getElementById('rep-route-dist').innerText = straightDist.toFixed(2) + ' KM';
+        document.getElementById('cost-grand').innerText = 'TOTAL: PKR ' + Math.round(initTotal).toLocaleString();
+        updateResidentialNote();
     }
 
     function drawLayoutDiagram(cols, rows) {
@@ -432,7 +2013,8 @@
         canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight;
         const scale = Math.min((canvas.width-40)/siteData.len, (canvas.height-40)/siteData.wid);
         const ox = (canvas.width-siteData.len*scale)/2, oy = (canvas.height-siteData.wid*scale)/2;
-        ctx.strokeStyle = '#27ae60'; ctx.lineWidth = 2.5; ctx.strokeRect(ox, oy, siteData.len*scale, siteData.wid*scale); ctx.strokeStyle = '#e67e22'; ctx.lineWidth = 1.5;
+        ctx.strokeStyle = '#27ae60'; ctx.lineWidth = 2.5; ctx.strokeRect(ox, oy, siteData.len*scale, siteData.wid*scale);
+        ctx.strokeStyle = '#e67e22'; ctx.lineWidth = 1.5;
         for(let i=0; i<cols; i++) for(let j=0; j<rows; j++){
             const x = ox + (i*(siteData.len/cols)+(siteData.len/cols)/2)*scale;
             const y = oy + (j*(siteData.wid/rows)+(siteData.wid/rows)/2)*scale;
@@ -443,35 +2025,297 @@
     async function downloadReport() {
         const btn = document.querySelector('button[onclick="downloadReport()"]');
         btn.innerText = "CAPTURING...";
-        document.getElementById('exp-date').innerText = "Date: " + new Date().toLocaleDateString();
-        document.getElementById('exp-name').innerText = siteData.name;
-        document.getElementById('exp-coords').innerText = `${siteData.lat.toFixed(5)}, ${siteData.lng.toFixed(5)}`;
-        document.getElementById('exp-dims').innerText = `${siteData.len}m x ${siteData.wid}m`;
-        document.getElementById('exp-count').innerText = document.getElementById('rep-bh-count').innerText;
-        document.getElementById('exp-depth').innerText = document.getElementById('rep-depth').innerText;
-        document.getElementById('exp-spt').innerText = document.getElementById('rep-spt-val').innerText;
-        document.getElementById('exp-profile').innerText = document.getElementById('rep-test-list').querySelector('b').innerText;
-        document.getElementById('exp-tests').innerText = document.getElementById('rep-test-list').innerText.split('\n')[1];
-        document.getElementById('exp-total').innerText = document.getElementById('cost-grand').innerText;
-        document.getElementById('exp-costs').innerHTML = `<div class="exp-data-row"><span>Drilling (${siteData.drillType}):</span> <b>PKR ${document.getElementById('cost-drill').innerText}</b></div><div class="exp-data-row"><span>Lab Tests:</span> <b>PKR ${document.getElementById('cost-lab').innerText}</b></div><div class="exp-data-row"><span>Mobilization:</span> <b>PKR ${document.getElementById('cost-mob').innerText}</b></div>`;
-        document.getElementById('exp-diagram-img').src = document.getElementById('layoutCanvas').toDataURL();
-        document.getElementById('top-menu').style.visibility = 'hidden';
-        const oldZoom = map.getZoom(); map.setZoom(oldZoom); 
-        setTimeout(async () => {
-            try {
-                const mapCanvas = await html2canvas(document.getElementById('map'), { useCORS: true, allowTaint: true, logging: false });
-                document.getElementById('exp-map-img').src = mapCanvas.toDataURL();
-                const reportCanvas = await html2canvas(document.getElementById('export-report-container'), { scale: 2 });
-                const link = document.createElement('a'); link.download = `GeoSightReport_${siteData.name.replace(/\s+/g, '_')}.png`;
-                link.href = reportCanvas.toDataURL(); link.click();
-            } catch (e) { alert("Download failed. Map tiles are protected."); }
-            finally { btn.innerText = "DOWNLOAD REPORT"; document.getElementById('top-menu').style.visibility = 'visible'; }
-        }, 1000);
+        btn.disabled = true;
+
+        try {
+            const container = document.getElementById('export-report-container');
+            container.innerHTML = ''; 
+
+            const makePage = () => {
+                const page = document.createElement('div');
+                page.className = 'pdf-page';
+                page.innerHTML = `<img src="d1d55df5-d117-4a76-a796-3f8ae1490674_removalai_preview.png" class="pdf-logo">`;
+                container.appendChild(page);
+                return page;
+            };
+
+            const p1 = makePage();
+            
+            const layoutSrc = document.getElementById('layoutCanvas').toDataURL();
+            const chemCostEl = document.getElementById('cost-chemical');
+            const chemRow    = document.getElementById('row-chemical');
+            const chemLine   = chemRow && chemRow.style.display !== 'none'
+                ? `<div class="exp-data-row"><span>Chemical Tests (1× project):</span> <b>PKR ${chemCostEl ? chemCostEl.innerText : '0'}</b></div>`
+                : '';
+
+            p1.innerHTML += `
+                <div class="exp-header">
+                    <div style="display:flex; align-items:center; gap:15px;">
+                        <img src="https://nust.edu.pk/wp-content/uploads/2020/03/NUST-Logo.png" height="70" crossorigin="anonymous">
+                        <div style="line-height:1.2">
+                            <div style="font-size:22px; font-weight:800; color:#0d6b49">GEOTECHNICAL INVESTIGATION REPORT</div>
+                            <div style="font-size:14px; color:#666">NUST Institute of Civil Engineering (NICE)</div>
+                        </div>
+                    </div>
+                    <div style="font-size:12px; color:#999; font-weight:600; margin-right: 140px;">Date: ${new Date().toLocaleDateString()}</div>
+                </div>
+                
+                <div class="exp-grid">
+                    <div class="exp-section">
+                        <div class="exp-sec-title">Site Information</div>
+                        <div class="exp-data-row"><span>Project Name:</span> <b>${siteData.name}</b></div>
+                        <div class="exp-data-row"><span>Coordinates:</span> <b>${siteData.lat.toFixed(5)}, ${siteData.lng.toFixed(5)}</b></div>
+                        <div class="exp-data-row"><span>Dimensions:</span> <b>${siteData.len}ft x ${siteData.wid}ft</b></div>
+                    </div>
+                    <div class="exp-section">
+                        <div class="exp-sec-title">Technical Specs</div>
+                        <div class="exp-data-row"><span>Borehole Count:</span> <b>${document.getElementById('rep-bh-count').innerText}</b></div>
+                        <div class="exp-data-row"><span>Depth per Bore:</span> <b>${document.getElementById('rep-depth').innerText}</b></div>
+                    </div>
+                </div>
+
+                <div class="exp-section">
+                    <div class="exp-sec-title">Borehole Layout Plan</div>
+                    <div style="text-align:center; padding:10px 0;">
+                        <img src="${layoutSrc}" style="width:100%; max-height:260px; object-fit:contain; border:1px solid #ddd; border-radius:6px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+                    </div>
+                </div>
+
+                <div class="exp-section" style="background:#f9f9f9; border-color:#d5e8e4;">
+                    <div class="exp-sec-title" style="color:#105e4d; border-color:#d5e8e4;">Cost Estimation (PKR)</div>
+                    <div class="exp-data-row"><span>Drilling (${siteData.drillType}):</span> <b>PKR ${document.getElementById('cost-drill').innerText}</b></div>
+                    <div class="exp-data-row"><span>SPT Testing:</span> <b>PKR ${document.getElementById('cost-spt').innerText}</b></div>
+                    <div class="exp-data-row"><span>Lab Tests:</span> <b>PKR ${document.getElementById('cost-lab').innerText}</b></div>
+                    ${chemLine}
+                    <div class="exp-data-row"><span>Report Fee:</span> <b>PKR ${document.getElementById('cost-report-fee').innerText}</b></div>
+                    <div class="exp-data-row"><span>Mobilization (${document.getElementById('rep-route-dist').innerText}):</span> <b>PKR ${document.getElementById('cost-mob').innerText}</b></div>
+                    <div style="font-size:22px; font-weight:800; text-align:right; color:#e67e22; margin-top:15px; border-top:2px solid #ccc; padding-top:12px;">
+                        ${document.getElementById('cost-grand').innerText}
+                    </div>
+                </div>
+            `;
+
+            const summaryEl = document.getElementById('sample-summary-content');
+            
+            const createTablePage = () => {
+                const pt = makePage();
+                pt.innerHTML += `
+                    <div class="exp-header" style="margin-bottom: 20px;">
+                        <div style="line-height:1.2">
+                            <div style="font-size:20px; font-weight:800; color:#0d6b49">LABORATORY TESTING PROGRAM</div>
+                            <div style="font-size:14px; color:#666; font-weight:bold;">Assigned Lab: <span style="color:#0d6b49;">${selectedLabName || nearestLabName || 'N/A'}</span></div>
+                        </div>
+                        <div style="margin-right:140px; color:#999; font-size:12px; font-weight:bold;">Project: ${siteData.name}</div>
+                    </div>
+                    <table class="exp-table">
+                        <thead>
+                            <tr>
+                                <th>Zone / Sample</th>
+                                <th>Depth (ft)</th>
+                                <th>Tests Required</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                `;
+                return pt;
+            };
+
+            let currentTablePage = null;
+            let tbody = null;
+            let rowsOnPage = 0;
+            const MAX_ROWS = 22;
+
+            if (summaryEl && summaryEl.innerHTML.trim() && !summaryEl.innerText.includes('Run a report')) {
+                const zones = summaryEl.querySelectorAll('div[style*="margin-bottom:14px"]');
+                let rowIdx = 0;
+                
+                zones.forEach(zone => {
+                    const zoneLabel = zone.querySelector('span') ? zone.querySelector('span').innerText : '';
+                    const samples = zone.querySelectorAll('div[style*="border:1px solid #105e4d"]');
+                    
+                    samples.forEach(sample => {
+                        if (!currentTablePage || rowsOnPage >= MAX_ROWS) {
+                            currentTablePage = createTablePage();
+                            tbody = currentTablePage.querySelector('tbody');
+                            rowsOnPage = 0;
+                        }
+
+                        const depthEl = sample.querySelector('div[style*="color:#e67e22"]');
+                        const depth = depthEl ? depthEl.innerText : '';
+                        const testEls = sample.querySelectorAll('div[style*="border-bottom:1px dotted"] span:first-child');
+                        const tests = Array.from(testEls).map(t => t.innerText).join(', ');
+                        
+                        const bg = rowIdx % 2 === 0 ? '#fff' : '#fcfcfc';
+                        tbody.innerHTML += `<tr style="background:${bg};">
+                            <td style="color:#555; font-weight:600;">${zoneLabel}</td>
+                            <td style="font-weight:700; color:#e67e22;">${depth}</td>
+                            <td style="color:#333;">${tests}</td>
+                        </tr>`;
+                        
+                        rowIdx++;
+                        rowsOnPage++;
+                    });
+                });
+
+                const chemBlock = summaryEl.querySelector('div[style*="rgba(230,126,34"]');
+                if (chemBlock) {
+                    if (!currentTablePage || rowsOnPage >= MAX_ROWS) {
+                        currentTablePage = createTablePage();
+                        tbody = currentTablePage.querySelector('tbody');
+                        rowsOnPage = 0;
+                    }
+                    const chemTests = Array.from(chemBlock.querySelectorAll('span[style*="color:#a8c7c1"]'))
+                        .map(t => t.innerText).join(', ');
+                    tbody.innerHTML += `<tr style="background:#fff8f0; border-top:2px solid #f0e6dc;">
+                        <td style="color:#e67e22; font-weight:800;" colspan="2">Chemical Tests (1× project)</td>
+                        <td style="font-weight:600; color:#d35400;">${chemTests}</td>
+                    </tr>`;
+                }
+            } else {
+                currentTablePage = createTablePage();
+                currentTablePage.querySelector('tbody').innerHTML = '<tr><td colspan="3" style="text-align:center; color:#999;">No sample data available.</td></tr>';
+            }
+
+            await new Promise(r => setTimeout(r, 400));
+            
+            const pages = document.querySelectorAll('.pdf-page');
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+            const pageW = 210, pageH = 297;
+
+            for (let i = 0; i < pages.length; i++) {
+                const pageCanvas = await html2canvas(pages[i], {
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: false,
+                    logging: false,
+                    backgroundColor: '#ffffff'
+                });
+                
+                const imgData = pageCanvas.toDataURL('image/png');
+                if (i > 0) pdf.addPage();
+                pdf.addImage(imgData, 'PNG', 0, 0, pageW, pageH);
+            }
+
+            pdf.save(`GeoSightReport_${siteData.name.replace(/\s+/g, '_')}.pdf`);
+
+        } catch (e) {
+            console.error('Download error:', e);
+            alert('Download failed: ' + e.message);
+        } finally {
+            btn.innerText = "DOWNLOAD PDF";
+            btn.disabled = false;
+        }
     }
 
     function renderHistoryUI() { const hList = JSON.parse(sessionStorage.getItem('geoSessionHistory') || '[]'); document.getElementById('history-list').innerHTML = hList.map((h, i) => `<div class="history-card"><strong>${h.name}</strong><br>PKR ${Math.round(h.total).toLocaleString()}<br><span class="view-btn" onclick="loadFromHistory(${i})">RECALL</span></div>`).join('') || "<p style='color:#a8c7c1'>Empty</p>"; }
     function loadFromHistory(index) { isRecalling = true; const hList = JSON.parse(sessionStorage.getItem('geoSessionHistory') || '[]'); siteData = hList[index]; generateReport(); toggleHistory(false); }
     function toggleHistory(o) { document.getElementById('history-drawer').style.right = o ? "0px" : "-420px"; if(o) renderHistoryUI(); }
+    
+    function renderSampleSummary(soilProfile, depthFt) {
+        const gwt = 999;
+        const zones = [];
+        for (let i = 0; i < soilProfile.length; i++) {
+            const l = soilProfile[i];
+            const sym = l.isRock ? 'ROCK' : l.uscs.symbol;
+            const last = zones[zones.length - 1];
+            if (last && last.sym === sym) {
+                last.layers.push(l);
+            } else {
+                zones.push({ sym, layers: [l] });
+            }
+        }
+
+        const chemApplies = depthFt > 50;
+
+        let html = '';
+        let layerIdx = 1;
+        let rockSampleAdded = false;
+
+        for (const zone of zones) {
+            const samplesInZone = Math.min(2, zone.layers.length);
+            const fromFt = zone.layers[0].depthFt - 5;
+            const toFt   = zone.layers[zone.layers.length - 1].depthFt;
+            const zoneLabel = zones.length > 1
+                ? `<span style="color:#27ae60; font-weight:700;">Zone ${layerIdx} (${zone.sym}) -- ${fromFt}-${toFt} ft</span>`
+                : `<span style="color:#27ae60; font-weight:700;">Zone (${zone.sym}) -- ${fromFt}-${toFt} ft</span>`;
+
+            html += `<div style="margin-bottom:14px;">
+                <div style="margin-bottom:6px; font-size:11.5px;">${zoneLabel}</div>`;
+
+            for (let s = 0; s < samplesInZone; s++) {
+                const l = zone.layers[s];
+                const sampleDepth = l.depthFt;
+                const tests = [];
+
+                if (l.isRock) {
+                    if (!rockSampleAdded) {
+                        tests.push('UCS (Rock)');
+                        rockSampleAdded = true;
+                    } else {
+                        tests.push('No further tests (1 UCS limit)');
+                    }
+                } else {
+                    const finesVal  = l.fines  != null ? parseFloat(l.fines)  : 50;
+                    const gravelVal = l.gravel != null ? parseFloat(l.gravel) : 0;
+                    const sandVal   = l.sand   != null ? parseFloat(l.sand)   : 0;
+                    const coarseSum = gravelVal + sandVal;
+                    const isGravely = finesVal < 50 && coarseSum > 0 && (gravelVal / coarseSum) > 0.5;
+                    const isClay    = finesVal >= 50;
+                    const belowGWT  = sampleDepth > gwt;
+
+                    tests.push('Sieve Analysis');
+                    tests.push('Moisture Content');
+                    tests.push('Specific Gravity');
+                    if (finesVal > 10) tests.push('Hydrometer Analysis');
+                    if (isClay)        tests.push('Atterberg Limits');
+                    if (isClay)        tests.push('UCS (Soil)');
+                    if (!isGravely)    tests.push('Direct Shear');
+                    if (isClay && belowGWT) tests.push('Consolidation');
+                }
+
+                html += `<div style="background:#052c24; border:1px solid #105e4d; border-radius:5px; padding:8px 10px; margin-bottom:6px;">
+                    <div style="font-size:10.5px; color:#e67e22; font-weight:700; margin-bottom:5px;">
+                        Sample ${s + 1} @ ${sampleDepth} ft depth
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:3px;">`;
+
+                for (const test of tests) {
+                    html += `<div style="display:flex; justify-content:space-between; font-size:11px; padding:2px 0; border-bottom:1px dotted rgba(16,94,77,0.4);">
+                        <span style="color:#a8c7c1;">${test}</span>
+                        <span style="color:#fff; font-weight:600;">1 sample</span>
+                    </div>`;
+                }
+
+                html += `</div></div>`;
+            }
+
+            html += `</div>`;
+            layerIdx++;
+        }
+
+        if (chemApplies) {
+            html += `<div style="margin-top:4px; padding:10px 12px; background:rgba(230,126,34,0.08); border:1.5px dashed rgba(230,126,34,0.5); border-radius:6px;">
+                <div style="font-size:10px; color:#e67e22; font-weight:700; letter-spacing:1px; margin-bottom:6px;">&#9879; CHEMICAL TESTS &mdash; ONCE PER PROJECT</div>
+                <div style="display:flex; justify-content:space-between; font-size:11px; padding:2px 0; border-bottom:1px dotted rgba(230,126,34,0.3);">
+                    <span style="color:#a8c7c1;">Sulphate Test</span>
+                    <span style="color:#e67e22; font-weight:600;">1&#215; project</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:11px; padding:2px 0;">
+                    <span style="color:#a8c7c1;">Chloride Test</span>
+                    <span style="color:#e67e22; font-weight:600;">1&#215; project</span>
+                </div>
+                <div style="font-size:9.5px; color:#888; margin-top:6px;">Charged once regardless of bore count. Condition: bore depth &gt; 50 ft.</div>
+            </div>`;
+        }
+
+        if (!html) html = '<div style="color:#555; font-size:12px;">No layers to display.</div>';
+
+        const el = document.getElementById('sample-summary-content');
+        if (el) el.innerHTML = html;
+    }
+
     setRandomPlaceholder();
 </script>
 </body>
