@@ -48,111 +48,260 @@
 
         #geosight-logo { position: fixed; bottom: 20px; right: 80px; z-index: 2500; height: 90px; width: auto; pointer-events: none; filter: drop-shadow(0 2px 10px rgba(0,0,0,0.5)); }
 
-        #export-report-container { 
-            position: absolute; left: -9999px; top: 0; 
-            width: 794px; background: #e8f3f1; 
-            display: flex; flex-direction: column; gap: 20px; padding: 20px;
-        }
-        .pdf-page {
-            width: 794px; height: 1123px;
-            background: #fff; color: #333;
-            padding: 50px 60px; box-sizing: border-box;
-            position: relative; overflow: hidden;
-            border: 1px solid #ddd;
-        }
-        .pdf-logo {
-            position: absolute; top: 40px; right: 50px; height: 60px; object-fit: contain; z-index: 10;
-        }
-        .exp-header { border-bottom: 3px solid #0d6b49; padding-bottom: 15px; margin-bottom: 25px; display: flex; align-items: center; justify-content: space-between; }
-        .exp-section { margin-bottom: 20px; border: 1px solid #eee; padding: 18px; border-radius: 8px; }
-        .exp-sec-title { font-weight: 800; color: #0d6b49; font-size: 15px; margin-bottom: 12px; text-transform: uppercase; border-bottom: 2px solid #eee; padding-bottom: 5px; }
+        #export-report-container { position: absolute; left: -9999px; width: 800px; background: #fff; color: #333; padding: 40px; box-sizing: border-box; }
+        .exp-header { border-bottom: 3px solid #0d6b49; padding-bottom: 15px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; }
+        .exp-section { margin-bottom: 20px; border: 1px solid #eee; padding: 15px; border-radius: 8px; }
+        .exp-sec-title { font-weight: bold; color: #0d6b49; font-size: 14px; margin-bottom: 10px; text-transform: uppercase; border-bottom: 1px solid #eee; padding-bottom: 5px; }
         .exp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .exp-data-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dotted #eee; font-size: 13px; }
-        
-        .exp-table { width: 100%; border-collapse: collapse; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; }
-        .exp-table th { background: #0d6b49; color: #fff; padding: 10px; font-size: 13px; text-align: left; }
-        .exp-table td { padding: 9px 10px; font-size: 12px; border-bottom: 1px solid #ddd; }
+        #exp-map-img { width: 100%; height: 350px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd; margin-top: 10px; }
+        #exp-diagram-img { width: 100%; height: 200px; object-fit: contain; border: 1px solid #eee; border-radius: 4px; }
+        .exp-data-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dotted #eee; font-size: 12px; }
 
+        /* -- DRILL TYPE CARDS -- */
         .drill-card {
-            background: #052c24; border: 1.5px solid #105e4d; border-radius: 7px;
-            padding: 10px 12px; cursor: pointer; transition: border-color 0.18s, background 0.18s; position: relative;
+            background: #052c24;
+            border: 1.5px solid #105e4d;
+            border-radius: 7px;
+            padding: 10px 12px;
+            cursor: pointer;
+            transition: border-color 0.18s, background 0.18s;
+            position: relative;
         }
-        .drill-card:hover { border-color: #27ae60; background: #063a2e; }
-        .drill-card.selected { border-color: #e67e22; background: rgba(230,126,34,0.08); }
+        .drill-card:hover {
+            border-color: #27ae60;
+            background: #063a2e;
+        }
+        .drill-card.selected {
+            border-color: #e67e22;
+            background: rgba(230,126,34,0.08);
+        }
         .drill-card.selected::after {
-            content: "SELECTED"; position: absolute; top: 6px; right: 8px;
-            font-size: 7.5px; font-weight: 700; letter-spacing: 0.8px; color: #e67e22;
+            content: "SELECTED";
+            position: absolute;
+            top: 6px; right: 8px;
+            font-size: 7.5px;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            color: #e67e22;
         }
-        .drill-card-name { font-size: 12.5px; font-weight: 700; color: #e8f3f1; margin-bottom: 3px; }
-        .drill-card-rate { font-size: 11px; color: #27ae60; font-weight: 600; margin-bottom: 5px; }
-        .drill-card-desc { font-size: 9.5px; color: #6a8f86; line-height: 1.5; }
+        .drill-card-name {
+            font-size: 12.5px;
+            font-weight: 700;
+            color: #e8f3f1;
+            margin-bottom: 3px;
+        }
+        .drill-card-rate {
+            font-size: 11px;
+            color: #27ae60;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        .drill-card-desc {
+            font-size: 9.5px;
+            color: #6a8f86;
+            line-height: 1.5;
+        }
 
-        #rock-warning { display: none; margin: 16px 0 0; border: 1.5px solid #e74c3c; border-radius: 8px; overflow: hidden; }
-        .rock-warning-header { background: #e74c3c; color: #fff; padding: 10px 16px; font-size: 12px; font-weight: 700; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
-        .rock-warning-body { background: rgba(231,76,60,0.06); padding: 14px 16px; font-size: 12px; line-height: 1.75; color: #e8f3f1; }
-        .rock-alt-cost { margin-top: 12px; padding: 10px 14px; background: rgba(231,76,60,0.1); border: 1px dashed rgba(231,76,60,0.5); border-radius: 5px; }
-        .rock-alt-cost-title { font-size: 10px; color: #e74c3c; font-weight: 700; letter-spacing: 1px; margin-bottom: 8px; }
-        .rock-alt-row { display: flex; justify-content: space-between; font-size: 11.5px; padding: 3px 0; border-bottom: 1px dotted rgba(231,76,60,0.2); }
+        #rock-warning {
+            display: none;
+            margin: 16px 0 0;
+            border: 1.5px solid #e74c3c;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .rock-warning-header {
+            background: #e74c3c;
+            color: #fff;
+            padding: 10px 16px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .rock-warning-body {
+            background: rgba(231,76,60,0.06);
+            padding: 14px 16px;
+            font-size: 12px;
+            line-height: 1.75;
+            color: #e8f3f1;
+        }
+        .rock-alt-cost {
+            margin-top: 12px;
+            padding: 10px 14px;
+            background: rgba(231,76,60,0.1);
+            border: 1px dashed rgba(231,76,60,0.5);
+            border-radius: 5px;
+        }
+        .rock-alt-cost-title {
+            font-size: 10px;
+            color: #e74c3c;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        .rock-alt-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11.5px;
+            padding: 3px 0;
+            border-bottom: 1px dotted rgba(231,76,60,0.2);
+        }
         .rock-alt-row:last-child { border-bottom: none; }
-        .rock-alt-total { margin-top: 8px; font-size: 15px; font-weight: 700; color: #e74c3c; text-align: right; }
+        .rock-alt-total {
+            margin-top: 8px;
+            font-size: 15px;
+            font-weight: 700;
+            color: #e74c3c;
+            text-align: right;
+        }
 
         #lab-selector-section { padding: 0 30px 24px; border-bottom: 1px solid #0a4d3f; }
         .lab-selector-header { font-size: 12px; color: #a8c7c1; margin-bottom: 10px; font-weight: 600; letter-spacing: 0.5px; }
-        #lab-search-input { width: 100%; padding: 9px 12px; background: #052c24; border: 1px solid #105e4d; color: #e8f3f1; outline: none; border-radius: 5px; font-size: 12px; box-sizing: border-box; margin-bottom: 8px; }
+        #lab-search-input {
+            width: 100%; padding: 9px 12px; background: #052c24; border: 1px solid #105e4d;
+            color: #e8f3f1; outline: none; border-radius: 5px; font-size: 12px;
+            box-sizing: border-box; margin-bottom: 8px;
+        }
         #lab-search-input:focus { border-color: #27ae60; }
-        #lab-list-container { max-height: 200px; overflow-y: auto; border: 1px solid #105e4d; border-radius: 5px; background: #052c24; }
-        .lab-list-item { padding: 9px 12px; cursor: pointer; border-bottom: 1px solid rgba(16,94,77,0.3); display: flex; justify-content: space-between; align-items: center; transition: background 0.15s; }
+        #lab-list-container {
+            max-height: 200px; overflow-y: auto; border: 1px solid #105e4d;
+            border-radius: 5px; background: #052c24;
+        }
+        .lab-list-item {
+            padding: 9px 12px; cursor: pointer; border-bottom: 1px solid rgba(16,94,77,0.3);
+            display: flex; justify-content: space-between; align-items: center;
+            transition: background 0.15s;
+        }
         .lab-list-item:last-child { border-bottom: none; }
         .lab-list-item:hover { background: rgba(39,174,96,0.08); }
         .lab-list-item.selected { background: rgba(39,174,96,0.15); border-left: 3px solid #27ae60; }
-        .lab-list-item.nearest-badge::after { content: "NEAREST"; font-size: 8px; color: #27ae60; border: 1px solid #27ae60; padding: 1px 5px; border-radius: 3px; margin-left: 6px; white-space: nowrap; }
+        .lab-list-item.nearest-badge::after {
+            content: "NEAREST"; font-size: 8px; color: #27ae60; border: 1px solid #27ae60;
+            padding: 1px 5px; border-radius: 3px; margin-left: 6px; white-space: nowrap;
+        }
         .lab-item-name { font-size: 11.5px; color: #e8f3f1; font-weight: 500; }
         .lab-item-dist { font-size: 11px; color: #27ae60; font-weight: 600; white-space: nowrap; margin-left: 8px; }
         .lab-item-phone { font-size: 10px; color: #555; margin-top: 2px; }
-        .selected-lab-info { margin-top: 10px; padding: 10px 12px; background: rgba(39,174,96,0.05); border: 1px solid rgba(39,174,96,0.25); border-radius: 5px; font-size: 11px; }
+        .selected-lab-info {
+            margin-top: 10px; padding: 10px 12px; background: rgba(39,174,96,0.05);
+            border: 1px solid rgba(39,174,96,0.25); border-radius: 5px; font-size: 11px;
+        }
         .selected-lab-info b { color: #27ae60; display: block; margin-bottom: 3px; }
 
         #rate-card-section { padding: 26px 30px; border-bottom: 1px solid #0a4d3f; }
-        .rate-card-header { color: #27ae60; font-size: 16px; letter-spacing: 1px; font-weight: 600; border-bottom: 2px solid #27ae60; padding-bottom: 8px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
+        .rate-card-header {
+            color: #27ae60; font-size: 16px; letter-spacing: 1px; font-weight: 600;
+            border-bottom: 2px solid #27ae60; padding-bottom: 8px; margin-bottom: 6px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
         .rate-card-header span { font-size: 10px; color: #a8c7c1; font-weight: 400; letter-spacing: 0; }
         .rate-card-hint { font-size: 11px; color: #a8c7c1; margin-bottom: 16px; }
-        .rate-group-title { font-size: 10px; letter-spacing: 1.5px; color: #27ae60; text-transform: uppercase; margin: 16px 0 8px; opacity: 0.7; }
-        .rate-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid rgba(16, 94, 77, 0.4); }
+
+        .rate-group-title {
+            font-size: 10px; letter-spacing: 1.5px; color: #27ae60;
+            text-transform: uppercase; margin: 16px 0 8px; opacity: 0.7;
+        }
+
+        .rate-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 9px 0; border-bottom: 1px solid rgba(16, 94, 77, 0.4);
+        }
         .rate-row:last-child { border-bottom: none; }
         .rate-label { font-size: 12.5px; color: #a8c7c1; flex: 1; }
         .rate-unit { font-size: 10px; color: #555; margin-right: 10px; }
 
-        .rate-value-wrap { display: flex; align-items: center; gap: 6px; background: #052c24; border: 1px solid #105e4d; border-radius: 5px; padding: 5px 10px; min-width: 120px; cursor: pointer; transition: border-color 0.2s, background 0.2s; position: relative; }
+        .rate-value-wrap {
+            display: flex; align-items: center; gap: 6px;
+            background: #052c24; border: 1px solid #105e4d;
+            border-radius: 5px; padding: 5px 10px; min-width: 120px;
+            cursor: pointer; transition: border-color 0.2s, background 0.2s;
+            position: relative;
+        }
         .rate-value-wrap:hover { border-color: #27ae60; background: #063a2e; }
         .rate-value-wrap.editing { border-color: #e67e22; background: #063a2e; }
 
         .rate-prefix { font-size: 10px; color: #27ae60; font-weight: 600; flex-shrink: 0; }
         .rate-display { font-size: 13px; color: #fff; font-weight: 600; flex: 1; text-align: right; min-width: 60px; }
-        .rate-input { font-size: 13px; color: #fff; font-weight: 600; background: transparent; border: none; outline: none; width: 80px; text-align: right; display: none; font-family: 'Segoe UI', sans-serif; }
+        .rate-input {
+            font-size: 13px; color: #fff; font-weight: 600; background: transparent;
+            border: none; outline: none; width: 80px; text-align: right;
+            display: none; font-family: 'Segoe UI', sans-serif;
+        }
         .rate-edit-icon { font-size: 10px; color: #27ae60; flex-shrink: 0; opacity: 0.6; }
         .rate-value-wrap:hover .rate-edit-icon { opacity: 1; }
 
-        .rate-reset-btn { width: 100%; margin-top: 14px; padding: 9px; background: transparent; color: #a8c7c1; border: 1px dashed #105e4d; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; transition: 0.2s; }
+        .rate-reset-btn {
+            width: 100%; margin-top: 14px; padding: 9px;
+            background: transparent; color: #a8c7c1;
+            border: 1px dashed #105e4d; border-radius: 6px;
+            cursor: pointer; font-size: 11px; font-weight: 600;
+            letter-spacing: 0.5px; transition: 0.2s;
+        }
         .rate-reset-btn:hover { border-color: #e67e22; color: #e67e22; }
 
-        .info-btn-bar { display: flex; gap: 10px; padding: 14px 20px 10px; border-bottom: 1px solid #0a4d3f; }
-        .info-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; background: #052c24; border: 1.5px solid #105e4d; border-radius: 8px; padding: 12px 6px; cursor: pointer; transition: border-color 0.18s, background 0.18s, transform 0.15s; position: relative; }
+        /* -- INFO BUTTONS (Rate Card / Lab Location / Sample Summary) -- */
+        .info-btn-bar {
+            display: flex; gap: 10px; padding: 14px 20px 10px;
+            border-bottom: 1px solid #0a4d3f;
+        }
+        .info-btn {
+            flex: 1; display: flex; flex-direction: column; align-items: center;
+            justify-content: center; gap: 6px;
+            background: #052c24; border: 1.5px solid #105e4d;
+            border-radius: 8px; padding: 12px 6px; cursor: pointer;
+            transition: border-color 0.18s, background 0.18s, transform 0.15s;
+            position: relative;
+        }
         .info-btn:hover { border-color: #27ae60; background: #063a2e; transform: translateY(-1px); }
         .info-btn svg { display: block; }
-        .info-btn-tooltip { position: absolute; bottom: calc(100% + 7px); left: 50%; transform: translateX(-50%); background: #000; color: #fff; font-size: 10px; font-weight: 600; white-space: nowrap; padding: 4px 9px; border-radius: 4px; pointer-events: none; opacity: 0; transition: opacity 0.15s; letter-spacing: 0.5px; }
+        .info-btn-tooltip {
+            position: absolute; bottom: calc(100% + 7px); left: 50%;
+            transform: translateX(-50%);
+            background: #000; color: #fff; font-size: 10px; font-weight: 600;
+            white-space: nowrap; padding: 4px 9px; border-radius: 4px;
+            pointer-events: none; opacity: 0; transition: opacity 0.15s;
+            letter-spacing: 0.5px;
+        }
         .info-btn:hover .info-btn-tooltip { opacity: 1; }
 
-        .info-panel-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(2, 20, 16, 0.88); z-index: 3000; display: none; align-items: center; justify-content: center; }
+        /* -- INFO PANEL OVERLAY -- */
+        .info-panel-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(2, 20, 16, 0.88); z-index: 3000;
+            display: none; align-items: center; justify-content: center;
+        }
         .info-panel-overlay.open { display: flex; }
-        .info-panel-box { background: #083d32; border: 1px solid #105e4d; border-radius: 12px; width: 500px; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.5); position: relative; overflow: hidden; }
-        .info-panel-header { display: flex; justify-content: space-between; align-items: center; padding: 18px 22px; border-bottom: 1px solid #0a4d3f; background: rgba(39,174,96,0.05); }
+        .info-panel-box {
+            background: #083d32; border: 1px solid #105e4d;
+            border-radius: 12px; width: 500px; max-height: 80vh;
+            display: flex; flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            position: relative; overflow: hidden;
+        }
+        .info-panel-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 18px 22px; border-bottom: 1px solid #0a4d3f;
+            background: rgba(39,174,96,0.05);
+        }
         .info-panel-title { color: #27ae60; font-size: 15px; font-weight: 700; letter-spacing: 1px; }
-        .info-panel-close { background: transparent; border: 1px solid #105e4d; color: #a8c7c1; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: 0.2s; line-height: 1; }
+        .info-panel-close {
+            background: transparent; border: 1px solid #105e4d; color: #a8c7c1;
+            width: 28px; height: 28px; border-radius: 50%; cursor: pointer;
+            font-size: 14px; display: flex; align-items: center; justify-content: center;
+            transition: 0.2s; line-height: 1;
+        }
         .info-panel-close:hover { border-color: #e67e22; color: #e67e22; }
         .info-panel-body { overflow-y: auto; padding: 20px 22px; flex: 1; }
 
         .rate-changed { color: #e67e22 !important; }
-        .rate-badge { display: inline-block; font-size: 8px; padding: 2px 5px; background: rgba(230,126,34,0.15); color: #e67e22; border: 1px solid rgba(230,126,34,0.3); border-radius: 3px; margin-left: 6px; vertical-align: middle; display: none; }
+        .rate-badge {
+            display: inline-block; font-size: 8px; padding: 2px 5px;
+            background: rgba(230,126,34,0.15); color: #e67e22;
+            border: 1px solid rgba(230,126,34,0.3); border-radius: 3px;
+            margin-left: 6px; vertical-align: middle; display: none;
+        }
     </style>
 </head>
 <body>
@@ -168,7 +317,45 @@
 
 <img id="geosight-logo" src="d1d55df5-d117-4a76-a796-3f8ae1490674_removalai_preview.png" alt="GeoSight Pro Logo">
 
-<div id="export-report-container"></div>
+<div id="export-report-container">
+    <div class="exp-header">
+        <div style="display:flex; align-items:center; gap:15px;">
+            <img src="https://nust.edu.pk/wp-content/uploads/2020/03/NUST-Logo.png" height="70" crossorigin="anonymous">
+            <div style="line-height:1.2">
+                <div style="font-size:18px; font-weight:bold; color:#0d6b49">GEOTECHNICAL INVESTIGATION REPORT</div>
+                <div style="font-size:12px; color:#666">NUST Institute of Civil Engineering (NICE)</div>
+            </div>
+        </div>
+        <div id="exp-date" style="font-size:11px; color:#999"></div>
+    </div>
+    <div class="exp-grid">
+        <div class="exp-section">
+            <div class="exp-sec-title">Site Information</div>
+            <div class="exp-data-row"><span>Project Name:</span> <b id="exp-name"></b></div>
+            <div class="exp-data-row"><span>Coordinates:</span> <b id="exp-coords"></b></div>
+            <div class="exp-data-row"><span>Dimensions:</span> <b id="exp-dims"></b></div>
+        </div>
+        <div class="exp-section">
+            <div class="exp-sec-title">Technical Specs</div>
+            <div class="exp-data-row"><span>Borehole Count:</span> <b id="exp-count"></b></div>
+            <div class="exp-data-row"><span>Depth per Bore:</span> <b id="exp-depth"></b></div>
+        </div>
+    </div>
+    <div class="exp-section">
+        <div class="exp-sec-title">Borehole Layout Plan</div>
+        <img id="exp-diagram-img" style="width:100%; max-height:220px; object-fit:contain; border:1px solid #eee; border-radius:4px;">
+    </div>
+    <div class="exp-section" style="background:#f9f9f9">
+        <div class="exp-sec-title">Cost Estimation (PKR)</div>
+        <div id="exp-costs"></div>
+        <div id="exp-total" style="font-size:18px; font-weight:bold; text-align:right; color:#e67e22; margin-top:10px; border-top:1px solid #ccc; padding-top:5px;"></div>
+    </div>
+    <div class="exp-section">
+        <div class="exp-sec-title">Laboratory Testing Program</div>
+        <div id="exp-test-list"></div>
+    </div>
+    <div style="font-weight:bold; font-size:12px; color:#0d6b49; margin-bottom:5px;">Lab Name: <span id="exp-lab-name" style="font-weight:400; color:#333;"></span></div>
+</div>
 
 <div id="modal-overlay">
     <div class="modal" id="modal-params">
@@ -245,8 +432,10 @@
         <div style="font-size:10px; color:#a8c7c1; font-weight: 600; margin-top: 3px; letter-spacing: 1px;">SOIL INVESTIGATION PROGRAM</div>
     </div>
 
+    <!-- THREE INFO BUTTONS -->
     <div class="info-btn-bar">
         <button class="info-btn" onclick="openInfoPanel('rate-card-panel')" title="Rate Card">
+            <!-- Money / Currency SVG -->
             <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="14" cy="14" r="13" stroke="#27ae60" stroke-width="1.5"/>
                 <text x="14" y="19.5" text-anchor="middle" font-size="14" font-weight="700" fill="#27ae60" font-family="Segoe UI,sans-serif">₨</text>
@@ -254,6 +443,7 @@
             <span class="info-btn-tooltip">RATE CARD</span>
         </button>
         <button class="info-btn" onclick="openInfoPanel('lab-panel')" title="Soil Lab Location">
+            <!-- Truck SVG -->
             <svg width="30" height="22" viewBox="0 0 30 22" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect x="1" y="4" width="18" height="12" rx="1.5" stroke="#27ae60" stroke-width="1.5"/>
                 <path d="M19 8h4.5l4 5v3H19V8z" stroke="#27ae60" stroke-width="1.5" stroke-linejoin="round"/>
@@ -263,6 +453,7 @@
             <span class="info-btn-tooltip">SOIL LAB LOCATION</span>
         </button>
         <button class="info-btn" onclick="openInfoPanel('sample-panel')" title="Soil Sample Summary">
+            <!-- Folder SVG -->
             <svg width="28" height="24" viewBox="0 0 28 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M2 5a2 2 0 012-2h7l2 3h11a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V5z" stroke="#27ae60" stroke-width="1.5" stroke-linejoin="round"/>
                 <line x1="7" y1="13" x2="21" y2="13" stroke="#27ae60" stroke-width="1.2" stroke-linecap="round"/>
@@ -272,6 +463,7 @@
         </button>
     </div>
 
+    <!-- RATE CARD INFO PANEL OVERLAY -->
     <div class="info-panel-overlay" id="rate-card-panel">
         <div class="info-panel-box" style="width:560px;">
             <div class="info-panel-header">
@@ -279,6 +471,7 @@
                 <button class="info-panel-close" onclick="closeInfoPanel('rate-card-panel')">&#x2715;</button>
             </div>
             <div class="info-panel-body">
+                <!-- Rate card content injected here -->
                 <div id="rate-card-section">
         <div class="rate-card-header">
             05. RATE CARD
@@ -490,11 +683,12 @@
         </div>
 
         <button class="rate-reset-btn" onclick="resetRates()">&#8634; RESTORE DEFAULT RATES</button>
-    </div>
-            </div>
-        </div>
-    </div>
+    </div><!-- end #rate-card-section -->
+            </div><!-- end info-panel-body -->
+        </div><!-- end info-panel-box -->
+    </div><!-- end #rate-card-panel overlay -->
 
+    <!-- LAB LOCATION INFO PANEL OVERLAY -->
     <div class="info-panel-overlay" id="lab-panel">
         <div class="info-panel-box" style="width:500px;">
             <div class="info-panel-header">
@@ -511,8 +705,9 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div><!-- end #lab-panel overlay -->
 
+    <!-- SAMPLE SUMMARY INFO PANEL OVERLAY -->
     <div class="info-panel-overlay" id="sample-panel">
         <div class="info-panel-box" style="width:500px;">
             <div class="info-panel-header">
@@ -523,7 +718,7 @@
                 <div id="sample-summary-content" style="font-size:12px; color:#a8c7c1;">Run a report to see sample counts.</div>
             </div>
         </div>
-    </div>
+    </div><!-- end #sample-panel overlay -->
 
     <div id="report-content" style="display:none;">
         <div class="report-section">
@@ -596,17 +791,18 @@
     <div id="history-list"></div>
 </div>
 
-</div> 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</div> <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
+    // -- INFO PANEL HELPERS --
     function openInfoPanel(id) {
         document.getElementById(id).classList.add('open');
     }
     function closeInfoPanel(id) {
         document.getElementById(id).classList.remove('open');
     }
+    // Close panels on overlay click
     document.addEventListener('DOMContentLoaded', function() {
         ['rate-card-panel','lab-panel','sample-panel'].forEach(function(id) {
             var el = document.getElementById(id);
@@ -620,20 +816,23 @@
     let isSelecting = false; let isRecalling = false; let currentMarker = null; let routeLayer = null; let nearestLabName = "";
     const funSiteNames = ["Misty Ridge Development", "NUST Sector H-12 Plot B", "Centaurus Extension", "Margalla Soil Survey", "Giga Mall Fix", "Rawalpindi Flyover"];
 
+    // Drill type rates (PKR per ft)
     const DRILL_RATES = {
         'Rotary':           1500,
         'Light Percussion': 600,
         'Heavy Percussion': 1000
     };
+    // Mobilization rates vary by drill type
     const MOB_RATES = {
         'Rotary':           { le20: 20000, gt20: 30000 },
         'Light Percussion': { le20: 10000, gt20: 15000 },
         'Heavy Percussion': { le20: 20000, gt20: 28000 }
     };
 
+    // -- DEFAULT RATES --
     const DEFAULT_RATES = {
         drill:       1500,
-        spt:         200, 
+        spt:         200,    // PKR 200/ft, every 3ft, ALL drill types
         moisture:    1000,
         sieve:       2500,
         hydro:       5000,
@@ -643,14 +842,15 @@
         ucs_rock:    5000,
         directshear: 5500,
         consol:      10000,
-        sulphate:    600, 
-        chloride:    600, 
+        sulphate:    600,    // chemical test (if depth > 50ft)
+        chloride:    600,    // chemical test (if depth > 50ft)
         mob20:       20000,
         mob30:       30000,
         report:      30000
     };
     let rates = { ...DEFAULT_RATES };
 
+    // -- DRILL TYPE SELECTION --
     function selectDrillType(type) {
         document.getElementById('input-drill-type').value = type;
         document.getElementById('drill-selected-label').innerText = 'Selected: ' + type;
@@ -674,6 +874,7 @@
     }
     selectDrillType('Rotary');
 
+    // -- BUILDING TYPE SELECTION --
     function selectBuildingType(type) {
         document.getElementById('input-building-type').value = type;
         const ids = { 'Residential': 'bt-residential', 'Commercial': 'bt-commercial' };
@@ -698,17 +899,22 @@
         }
     }
 
+    // Update note dynamically when stories change
     document.getElementById('input-stories').addEventListener('input', function() {
         if (document.getElementById('input-building-type').value === 'Residential') {
             selectBuildingType('Residential');
         }
     });
 
+    // -- REPORT FEE HELPER --
+    // Returns PKR 5,000 for residential buildings <= 3 stories; otherwise uses rate card
     function getReportFee() {
         if (siteData.buildingType === 'Residential' && siteData.stories <= 3) return 5000;
         return rates.report;
     }
 
+    // -- RESIDENTIAL NOTE HELPER --
+    // Shows a small advisory note near the total when conditions are met
     function updateResidentialNote() {
         const el = document.getElementById('residential-lab-note');
         if (!el) return;
@@ -742,10 +948,12 @@
         inp.style.display = 'none';
         wrap.querySelector('.rate-edit-icon').style.display = 'block';
 
+        // Show/hide EDITED badge
         const badge = document.getElementById('badge-' + key);
         if (badge) badge.style.display = (val !== DEFAULT_RATES[key]) ? 'inline-block' : 'none';
         disp.classList.toggle('rate-changed', val !== DEFAULT_RATES[key]);
 
+        // Recalculate if report is showing
         if (document.getElementById('report-content').style.display !== 'none') {
             recalcCosts();
         }
@@ -784,7 +992,7 @@
         const bhCount    = Math.ceil(siteData.len / 82.02) * Math.ceil(siteData.wid / 82.02);
         const sptTests   = Math.floor(soilDepthFt / 3);
         const sptCost    = sptTests * bhCount * rates.spt;
-        const drillCost  = (soilDepthFt * rates.drill + rockDepthFt * 5000) * bhCount;
+        const drillCost  = (soilDepthFt * rates.drill + rockDepthFt * 1700) * bhCount;
         const soilProfile = buildSoilProfile(siteData.lat, siteData.lng, depthFt);
         const labResult   = calcLabCost(soilProfile, depthFt, siteData.gwt || 999);
         const labCost     = labResult.lab * bhCount;
@@ -814,6 +1022,7 @@
         renderRockWarning(rockPred, requiredDepthFt, bhCount, rates);
     }
 
+    // -- LAYERED BOREHOLE DATABASE --
     const boreholes = [
       { name:"Naval Anchorage BH1", lat:33.538, lng:73.029, rockDepthFt:null, layers:[
           { depthFt:5.0, gravel:0.0, sand:0.0, fines:null, LL:null, PL:null, PI:null, N:8.2, rock:false },
@@ -1256,9 +1465,10 @@
         }
     }
 
+    // -- LAB SELECTOR STATE --
     let selectedLabName = "";
     let selectedLabDist = 0;
-    let allLabsSorted   = [];
+    let allLabsSorted   = []; // sorted by distance after site is picked
 
     function findNearestLab(siteLat, siteLng) {
         let best = geotechnicalLabs[0], bestD = Infinity;
@@ -1305,6 +1515,7 @@
         selectedLabDist = lab.distKm;
         renderLabList(document.getElementById('lab-search-input').value);
 
+        // Update selected lab info box
         const mob = lab.distKm <= 20 ? rates.mob20 : rates.mob30;
         document.getElementById('selected-lab-info').innerHTML =
             `<b>&#128205; ${lab.name}</b>
@@ -1313,7 +1524,10 @@
              Distance: <b style="color:#27ae60">${lab.distKm.toFixed(2)} km</b> &nbsp;&middot;&nbsp;
              Mobilization: <b style="color:#e67e22">PKR ${mob.toLocaleString()}</b>`;
 
+        // Draw route to selected lab on map
         fetchRoadRoute(siteData.lat, siteData.lng, lab);
+
+        // Highlight selected lab marker
         nearestLabName = lab.name;
         toggleLabs(document.getElementById('labToggle').checked);
         if (labMarkers[lab.name]) {
@@ -1339,6 +1553,7 @@
                 updateReportWithRoute(roadDist, mobCost);
                 selectedLabDist = roadDist;
 
+                // Update info box with actual road distance
                 const mob = roadDist <= 20 ? rates.mob20 : rates.mob30;
                 const infoEl = document.getElementById('selected-lab-info');
                 if (infoEl) {
@@ -1351,18 +1566,21 @@
                 }
             }
         }).catch(() => {
+            // OSRM failed -- fall back to haversine straight-line distance
             const distKm = haversineKm(startLat, startLng, lab.lat, lab.lng);
             const mobCost = distKm <= 20 ? rates.mob20 : rates.mob30;
             updateReportWithRoute(distKm, mobCost);
         });
     }
 
+    // Initialise lab selector when report is first generated
     function initLabSelector(siteLat, siteLng) {
         buildLabListSorted(siteLat, siteLng);
         const nearest = allLabsSorted[0];
         selectedLabName = nearest.name;
         selectedLabDist = nearest.distKm;
         renderLabList();
+        // Pre-fill info box
         const mob = nearest.distKm <= 20 ? rates.mob20 : rates.mob30;
         const infoEl = document.getElementById('selected-lab-info');
         if (infoEl) {
@@ -1415,14 +1633,28 @@
 
     map.on('click', function(e) { if (!isSelecting) return; siteData.lat = e.latlng.lat; siteData.lng = e.latlng.lng; isSelecting = false; generateReport(); });
 
+    // ==========================================================
+    //  ORDINARY KRIGING  --  Spherical variogram model
+    //  Steps:
+    //   1. Collect valid data points for the requested key
+    //   2. Auto-fit variogram parameters (nugget, sill, range)
+    //      from the experimental variogram of the dataset
+    //   3. Build (n+1)x(n+1) kriging matrix C and RHS vector c
+    //   4. Solve C&middot;w = c via Gaussian elimination
+    //   5. Return weighted estimate sum wi&middot;zi
+    // ==========================================================
+
+    // Haversine distance in km between two lat/lng points
     function haversineKm(lat1, lng1, lat2, lng2) {
         const R = 6371, toRad = Math.PI / 180;
         const dLat = (lat2 - lat1) * toRad;
         const dLng = (lng2 - lng1) * toRad;
-        const a = Math.sin(dLat/2)**2 + Math.cos(lat1*toRad) * Math.cos(lat2*toRad) * Math.sin(dLng/2)**2;
+        const a = Math.sin(dLat/2)**2 +
+                  Math.cos(lat1*toRad) * Math.cos(lat2*toRad) * Math.sin(dLng/2)**2;
         return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 
+    // Spherical variogram model: gamma(h) given nugget, sill (partial), range
     function sphericalVariogram(h, nugget, sill, range) {
         if (h <= 0) return 0;
         if (h >= range) return nugget + sill;
@@ -1430,6 +1662,26 @@
         return nugget + sill * (1.5 * r - 0.5 * r * r * r);
     }
 
+    // =================================================================
+    //  REAL GEOSTATISTICAL KRIGING PIPELINE
+    //  Matches methodology in GSLIB / GeoR / ArcGIS Geostatistical Analyst
+    //
+    //  Step 1 -- Experimental variogram (Matheron's estimator)
+    //            gamma*(h_k) = [1 / 2N(h_k)] * sum (z_i - z_j)^2
+    //            where all pairs (i,j) with ||x_i - x_j|| in lag bin k
+    //
+    //  Step 2 -- Weighted least squares fit of spherical model
+    //            Minimize: Q = sum_k N(h_k) * [gamma*(h_k) - gamma_model(h_k)]^2
+    //            Weight by N(h_k) so well-populated bins dominate the fit
+    //
+    //  Step 3 -- Nelder-Mead simplex optimisation (derivative-free)
+    //            Standard method used in R's gstat, GSLIB, GeoR
+    //            Converges in ~200 iterations for 3 parameters
+    //
+    //  Step 4 -- Ordinary kriging system assembly and solve (unchanged)
+    // =================================================================
+
+    // --- Helper: sample variance of a point set ---
     function sampleVariance(pts) {
         const n = pts.length;
         if (n < 2) return 1;
@@ -1437,6 +1689,7 @@
         return pts.reduce((s, p) => s + Math.pow(p.v - mean, 2), 0) / (n - 1);
     }
 
+    // --- STEP 1: Matheron experimental variogram ---
     function experimentalVariogram(pts, nBins) {
         const n = pts.length;
         const pairs = [];
@@ -1453,6 +1706,7 @@
 
         if (pairs.length === 0 || maxDist === 0) return { bins: [], maxDist: 1 };
 
+        // Use 60% of max distance as practical range limit (avoids edge effects)
         const maxLag  = maxDist * 0.60;
         const numBins = Math.max(4, Math.min(nBins, Math.floor(pairs.length / 2)));
         const lagW    = maxLag / numBins;
@@ -1471,6 +1725,8 @@
         return { bins, maxDist };
     }
 
+    // --- STEP 2: Weighted least-squares objective ---
+    // Q = sum_k N(h_k) * (gamma*(h_k) - gamma_model(h_k))^2
     function wlsObjective(bins, nugget, sill, range) {
         if (nugget < 0 || sill <= 0 || range <= 0) return 1e18;
         return bins.reduce((sum, pt) => {
@@ -1479,10 +1735,13 @@
         }, 0);
     }
 
+    // --- STEP 3: Nelder-Mead simplex optimiser (3-parameter) ---
+    // Reference: Nelder & Mead (1965), Computer Journal
     function nelderMead(fn, x0, maxIter) {
         const n  = x0.length;
         const alpha = 1.0, gamma = 2.0, rho = 0.5, sigma = 0.5;
 
+        // Initialise simplex: x0 + small perturbation per axis
         const simplex = [x0.slice()];
         for (let i = 0; i < n; i++) {
             const x = x0.slice();
@@ -1491,36 +1750,46 @@
         }
 
         for (let iter = 0; iter < maxIter; iter++) {
+            // Sort ascending by objective value
             simplex.sort((a, b) => fn(a) - fn(b));
+
+            // Convergence check
             if (Math.abs(fn(simplex[n]) - fn(simplex[0])) < 1e-12) break;
 
+            // Centroid of all vertices except worst
             const xo = new Array(n).fill(0);
             for (let i = 0; i < n; i++)
                 for (let d = 0; d < n; d++) xo[d] += simplex[i][d] / n;
 
+            // Reflection
             const xr = xo.map((c, d) => c + alpha * (c - simplex[n][d]));
             const fr = fn(xr);
 
             if (fr < fn(simplex[0])) {
+                // Expansion
                 const xe = xo.map((c, d) => c + gamma * (xr[d] - c));
                 simplex[n] = fn(xe) < fr ? xe : xr;
             } else if (fr < fn(simplex[n - 1])) {
                 simplex[n] = xr;
             } else {
+                // Contraction
                 const xc = xo.map((c, d) => c + rho * (simplex[n][d] - c));
                 if (fn(xc) < fn(simplex[n])) {
                     simplex[n] = xc;
                 } else {
+                    // Shrink all vertices toward best
                     for (let i = 1; i <= n; i++)
                         simplex[i] = simplex[i].map((v, d) =>
                             simplex[0][d] + sigma * (v - simplex[0][d]));
                 }
             }
         }
+
         simplex.sort((a, b) => fn(a) - fn(b));
         return simplex[0];
     }
 
+    // --- STEP 4: Fit variogram (replaces old fake version) ---
     function fitVariogram(pts) {
         const n = pts.length;
         if (n < 3) {
@@ -1529,16 +1798,23 @@
         }
 
         const { bins, maxDist } = experimentalVariogram(pts, 10);
+
+        // Fallback: if fewer than 3 populated bins, cannot fit reliably
         if (bins.length < 3) {
             const v = sampleVariance(pts);
             return { nugget: v * 0.05, sill: v * 0.95, range: maxDist * 0.4, bins, fitted: false };
         }
 
+        // --- Initial parameter estimates ---
+        // Nugget: y-intercept of first bin (nearest-lag semivariance)
         const nugget0 = Math.max(0, bins[0].gamma * 0.5);
+        // Sill: semivariance at the last populated bin
         const totalSill = bins[bins.length - 1].gamma;
         const sill0 = Math.max(0.001, totalSill - nugget0);
+        // Range: lag distance where semivariance first plateaus (approx midpoint)
         const range0 = Math.max(0.05, maxDist * 0.35);
 
+        // --- Coarse grid search to find a good basin for Nelder-Mead ---
         let bestParams = [nugget0, sill0, range0];
         let bestObj = wlsObjective(bins, nugget0, sill0, range0);
 
@@ -1555,31 +1831,35 @@
             }
         }
 
+        // --- Nelder-Mead refinement ---
         const fn = (p) => wlsObjective(bins, Math.max(0, p[0]), Math.max(0.001, p[1]), Math.max(0.01, p[2]));
         const refined = nelderMead(fn, bestParams, 300);
 
-        const nugget = Math.max(0,      refined[0]);
+        const nugget = Math.max(0,     refined[0]);
         const sill   = Math.max(0.001, refined[1]);
         const range  = Math.max(0.01,  refined[2]);
 
         return { nugget, sill, range, bins, fitted: true };
     }
 
+    // Gaussian elimination with partial pivoting -- solves A&middot;x = b in-place
     function gaussianElimination(A, b) {
         const n = b.length;
         for (let col = 0; col < n; col++) {
+            // Partial pivot
             let maxRow = col;
             for (let row = col + 1; row < n; row++)
                 if (Math.abs(A[row][col]) > Math.abs(A[maxRow][col])) maxRow = row;
             [A[col], A[maxRow]] = [A[maxRow], A[col]];
             [b[col], b[maxRow]] = [b[maxRow], b[col]];
-            if (Math.abs(A[col][col]) < 1e-12) continue;
+            if (Math.abs(A[col][col]) < 1e-12) continue; // singular -- skip
             for (let row = col + 1; row < n; row++) {
                 const factor = A[row][col] / A[col][col];
                 for (let k = col; k < n; k++) A[row][k] -= factor * A[col][k];
                 b[row] -= factor * b[col];
             }
         }
+        // Back substitution
         const x = new Array(n).fill(0);
         for (let i = n - 1; i >= 0; i--) {
             x[i] = b[i];
@@ -1589,12 +1869,14 @@
         return x;
     }
 
+    // Main kriging function -- replaces calculateIDW
     function calculateKriging(lat, lng, key) {
         const pts = boreholes
             .filter(bh => bh[key] !== null && bh[key] !== undefined)
             .map(bh => ({ lat: bh.lat, lng: bh.lng, v: bh[key] }));
 
         if (pts.length === 0) return 0;
+        // Fall back to nearest-neighbour if only 1-2 points
         if (pts.length < 3) {
             let best = pts[0], bestD = Infinity;
             pts.forEach(p => { const d = haversineKm(lat, lng, p.lat, p.lng); if (d < bestD) { bestD = d; best = p; } });
@@ -1604,16 +1886,20 @@
         const { nugget, sill, range } = fitVariogram(pts);
         const n = pts.length;
 
+        // Build (n+1)x(n+1) ordinary-kriging matrix C
+        // C[i][j] = gamma(dist(i,j)) for i,j < n; last row/col = 1 (Lagrange)
         const C = Array.from({ length: n + 1 }, () => new Array(n + 1).fill(0));
         for (let i = 0; i < n; i++) {
             for (let j = 0; j < n; j++) {
                 const h = haversineKm(pts[i].lat, pts[i].lng, pts[j].lat, pts[j].lng);
                 C[i][j] = sphericalVariogram(h, nugget, sill, range);
             }
-            C[i][n] = 1; C[n][i] = 1;
+            C[i][n] = 1;
+            C[n][i] = 1;
         }
-        C[n][n] = 0;
+        C[n][n] = 0; // Lagrange multiplier diagonal
 
+        // Build RHS vector c: gamma(dist(unknown &#8594; each point)), then 1
         const c = new Array(n + 1).fill(0);
         for (let i = 0; i < n; i++) {
             const h = haversineKm(lat, lng, pts[i].lat, pts[i].lng);
@@ -1621,19 +1907,31 @@
         }
         c[n] = 1;
 
+        // Deep-copy C before elimination (it's modified in-place)
         const Acopy = C.map(row => [...row]);
         const weights = gaussianElimination(Acopy, c);
 
+        // Kriging estimate = sum wi&middot;zi  (skip Lagrange weight at index n)
         let estimate = 0;
         for (let i = 0; i < n; i++) estimate += weights[i] * pts[i].v;
 
+        // Clamp to data range to avoid extrapolation artefacts
         const minV = Math.min(...pts.map(p => p.v));
         const maxV = Math.max(...pts.map(p => p.v));
         return Math.max(minV, Math.min(maxV, estimate));
     }
 
+    // Alias -- legacy calls still work
+    function calculateIDW(lat, lng, key) {
+        return calculateKriging(lat, lng, key);
+    }
+
+    // -- PER-DEPTH PROPERTY KRIGING --
+    // For a given depth (ft) and property key, find the value each borehole
+    // has at that depth (nearest layer within +/-10ft), then krig spatially.
     function getBoreholeValueAtDepth(bh, depthFt, key) {
         if (!bh.layers || bh.layers.length === 0) return null;
+        // Find closest layer within +/-10ft tolerance
         let best = null, bestDiff = Infinity;
         for (const layer of bh.layers) {
             const diff = Math.abs(layer.depthFt - depthFt);
@@ -1652,6 +1950,7 @@
         }
         if (pts.length === 0) return null;
         if (pts.length < 3) {
+            // Nearest neighbour fallback
             let best = pts[0], bestD = Infinity;
             pts.forEach(p => { const d = haversineKm(siteLat, siteLng, p.lat, p.lng); if (d < bestD) { bestD = d; best = p; } });
             return best.v;
@@ -1681,23 +1980,30 @@
         return Math.max(minV, Math.min(maxV, est));
     }
 
+    // -- USCS CLASSIFICATION ENGINE --
+    // Returns { symbol, name, texture, color } for a set of soil properties
     function classifyUSCS(gravel, sand, fines, LL, PI, isRock) {
+        // Rock layer -- bypass all soil classification
         if (isRock) return { symbol:"ROCK", name:"Rock / Shale", texture:"Rock", color:"#922B21" };
+        // Ensure values are numbers; treat null as "unknown"
         const f  = (fines  !== null && fines  !== undefined) ? fines  : null;
         const g  = (gravel !== null && gravel !== undefined) ? gravel : null;
         const s  = (sand   !== null && sand   !== undefined) ? sand   : null;
         const ll = (LL     !== null && LL     !== undefined) ? LL     : null;
         const pi = (PI     !== null && PI     !== undefined) ? PI     : null;
 
+        // If no sieve data at all
         if (f === null && g === null && s === null) {
+            // Use LL/PI if available for fine-grained guess
             if (ll !== null && pi !== null) {
                 const aLine = 0.73 * (ll - 20);
                 if (ll < 50) return pi >= aLine ? {symbol:"CL",name:"Lean Clay",         texture:"Fine",   color:"#8B5E3C"} : {symbol:"ML",name:"Silt (Low Plasticity)", texture:"Fine",  color:"#A0856B"};
-                else         return pi >= aLine ? {symbol:"CH",name:"Fat Clay",          texture:"Fine",   color:"#6B3A2A"} : {symbol:"MH",name:"Elastic Silt",          texture:"Fine",  color:"#8B6B55"};
+                else         return pi >= aLine ? {symbol:"CH",name:"Fat Clay",            texture:"Fine",   color:"#6B3A2A"} : {symbol:"MH",name:"Elastic Silt",          texture:"Fine",  color:"#8B6B55"};
             }
             return {symbol:"??", name:"Insufficient Data", texture:"Unknown", color:"#444"};
         }
 
+        // -- COARSE-GRAINED (fines < 50%) --
         if (f !== null && f < 50) {
             const coarse = (g||0) + (s||0);
             const gravelFrac = coarse > 0 ? (g||0) / coarse * 100 : 0;
@@ -1706,6 +2012,7 @@
             if (isGravel) {
                 if (f < 5)       return {symbol:"GW/GP", name:"Well/Poorly Graded Gravel", texture:"Gravel", color:"#7D6608"};
                 if (f >= 5 && f <= 12) return {symbol:"GM/GC", name:"Silty/Clayey Gravel", texture:"Gravel", color:"#9A7D0A"};
+                // f > 12
                 if (pi !== null) {
                     const aLine = 0.73 * (ll - 20);
                     return pi >= aLine ? {symbol:"GC",name:"Clayey Gravel",   texture:"Gravel",color:"#B7950B"}
@@ -1713,6 +2020,7 @@
                 }
                 return {symbol:"GC/GM",name:"Clayey/Silty Gravel",texture:"Gravel",color:"#B7950B"};
             } else {
+                // SAND
                 if (f < 5)       return {symbol:"SW/SP", name:"Well/Poorly Graded Sand",   texture:"Sand",   color:"#D4AC0D"};
                 if (f >= 5 && f <= 12) return {symbol:"SM/SC", name:"Silty/Clayey Sand",    texture:"Sand",   color:"#E5BE50"};
                 if (pi !== null && ll !== null) {
@@ -1724,8 +2032,10 @@
             }
         }
 
+        // -- FINE-GRAINED (fines >= 50%) --
         if (f !== null && f >= 50) {
             if (ll === null || pi === null) {
+                // Can't use plasticity chart -- classify by fines alone
                 return {symbol:"CL/ML",name:"Clay or Silt (Atterberg N/A)",texture:"Fine",color:"#8B6B55"};
             }
             const aLine = 0.73 * (ll - 20);
@@ -1734,11 +2044,12 @@
                 return aboveA ? {symbol:"CL",  name:"Lean Clay",             texture:"Fine", color:"#8B5E3C"}
                                : {symbol:"ML",  name:"Silt (Low Plasticity)",texture:"Fine", color:"#A0856B"};
             } else {
-                return aboveA ? {symbol:"CH",  name:"Fat Clay",               texture:"Fine", color:"#6B3A2A"}
-                               : {symbol:"MH",  name:"Elastic Silt",          texture:"Fine", color:"#8B6B55"};
+                return aboveA ? {symbol:"CH",  name:"Fat Clay",              texture:"Fine", color:"#6B3A2A"}
+                               : {symbol:"MH",  name:"Elastic Silt",         texture:"Fine", color:"#8B6B55"};
             }
         }
 
+        // Borderline (fines ~ 50%) -- use plasticity if available
         if (ll !== null && pi !== null) {
             const aLine = 0.73 * (ll - 20);
             return pi >= aLine ? {symbol:"CL",name:"Lean Clay (borderline)",texture:"Fine",color:"#8B5E3C"}
@@ -1747,6 +2058,13 @@
         return {symbol:"CL/ML",name:"Clay-Silt (borderline)",texture:"Fine",color:"#8B6B55"};
     }
 
+    // -- ROCK LAYER DETECTION --
+    // Returns the predicted rock depth (ft) for a site, or null if no rock expected.
+    // Strategy: nearest-neighbour on boreholes that recorded rock.
+    // We do NOT krig rock depth -- only 2 boreholes have rock data (Park View City),
+    // which is insufficient for spatial kriging. Nearest-neighbour is honest.
+    // We apply a distance threshold: beyond 15km from any rock-recorded borehole,
+    // we cannot make a meaningful prediction and return null.
     function predictRockDepth(siteLat, siteLng) {
         const rockBHs = boreholes.filter(bh => bh.rockDepthFt !== null);
         if (rockBHs.length === 0) return null;
@@ -1757,9 +2075,12 @@
             if (d < nearestDist) { nearestDist = d; nearest = bh; }
         }
 
+        // Beyond 15km from any rock site &#8594; insufficient basis for prediction
         const ROCK_INFLUENCE_KM = 15;
         if (nearestDist > ROCK_INFLUENCE_KM) return null;
 
+        // Linear scaling: rock depth increases slightly with distance
+        // (conservative -- rock tends to be deeper further from outcrop)
         const scaledDepth = nearest.rockDepthFt * (1 + nearestDist / 20);
         return {
             depthFt:    Math.round(scaledDepth),
@@ -1772,6 +2093,7 @@
         };
     }
 
+    // -- ROCK WARNING RENDERER --
     function renderRockWarning(rockPred, requiredDepthFt, bhCount, rates) {
         const el = document.getElementById('rock-warning');
         const body = document.getElementById('rock-warning-body');
@@ -1796,19 +2118,21 @@
                 &nbsp;&middot;&nbsp; Method: Nearest-neighbour
             </div>
             <div style="font-size:11px; margin-bottom:4px; padding:8px 10px; background:rgba(255,255,255,0.04); border-radius:5px;">
-                <b>Action -- Coring 3m (10 ft) into rock</b><br>
-                Standard rotary drilling stops at rock surface. Diamond core drilling is applied for exactly 3m (10 ft) into the rock layer.<br>
-                The total depth and cost estimates above have been automatically adjusted to include this coring at PKR 5,000/ft and <b>only one UCS (Rock) test</b> per borehole.
+                <b>Action — Coring 10 ft into rock layer</b><br>
+                Drilling is applied for 10 ft into the rock layer.<br>
+                The total depth and cost estimates above have been automatically adjusted to include this coring at PKR 1,700/ft and <b>only one UCS (Rock) test</b> per borehole.
             </div>
         `;
     }
     
+    // Returns array of layer objects with kriged properties + USCS class
     function buildSoilProfile(siteLat, siteLng, depthFt) {
         const interval = 5;
         const layers   = [];
         const rockPred = predictRockDepth(siteLat, siteLng);
 
         for (let d = interval; d <= depthFt; d += interval) {
+            // Mark as rock if predicted rock depth falls at or before this interval
             const isRock = rockPred && d >= rockPred.depthFt;
 
             const gravel = isRock ? null : krigAtDepth(siteLat, siteLng, d, 'gravel');
@@ -1836,7 +2160,79 @@
         return layers;
     }
 
+    // -- RENDER SOIL PROFILE TABLE --
+    function renderSoilProfile(layers) {
+        // Merge consecutive layers with same USCS symbol into one row
+        const merged = [];
+        for (const l of layers) {
+            const last = merged[merged.length - 1];
+            if (last && last.uscs.symbol === l.uscs.symbol) {
+                last.toFt = l.depthFt;
+                // Average numerical values
+                ['gravel','sand','fines','LL','PL','PI','N'].forEach(k => {
+                    if (l[k] !== null && last[k] !== null) last[k] = ((parseFloat(last[k]) + parseFloat(l[k])) / 2).toFixed(1);
+                    else if (l[k] !== null) last[k] = l[k];
+                });
+            } else {
+                merged.push({ fromFt: l.depthFt - 5, toFt: l.depthFt, ...l });
+            }
+        }
+
+        let html = `
+        <div style="font-size:10px;color:#a8c7c1;margin-bottom:8px;font-weight:600;letter-spacing:1px;">
+            INTERPOLATED SOIL PROFILE (Kriging &middot; USCS Classification)
+        </div>
+        <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:11px;">
+          <thead>
+            <tr style="border-bottom:1px solid #105e4d;">
+              <th style="padding:5px 4px;text-align:left;color:#27ae60;font-weight:600;white-space:nowrap;">Depth (ft)</th>
+              <th style="padding:5px 4px;color:#27ae60;font-weight:600;">USCS</th>
+              <th style="padding:5px 4px;color:#27ae60;font-weight:600;text-align:left;">Description</th>
+              <th style="padding:5px 4px;color:#27ae60;font-weight:600;">%F</th>
+              <th style="padding:5px 4px;color:#27ae60;font-weight:600;">%G</th>
+              <th style="padding:5px 4px;color:#27ae60;font-weight:600;">LL</th>
+              <th style="padding:5px 4px;color:#27ae60;font-weight:600;">PI</th>
+              <th style="padding:5px 4px;color:#27ae60;font-weight:600;">N</th>
+            </tr>
+          </thead>
+          <tbody>`;
+
+        for (const l of merged) {
+            const nDisplay = l.N !== null
+                ? (parseFloat(l.N) >= 50 ? '<span style="color:#e67e22;font-weight:bold">R</span>' : l.N)
+                : '<span style="color:#555">--</span>';
+            html += `
+            <tr style="border-bottom:1px solid rgba(16,94,77,0.3);">
+              <td style="padding:6px 4px;white-space:nowrap;color:#a8c7c1;">${l.fromFt}-${l.toFt}</td>
+              <td style="padding:6px 4px;text-align:center;">
+                <span style="background:${l.uscs.color};color:#fff;padding:2px 6px;border-radius:3px;font-weight:bold;font-size:10px;white-space:nowrap;">${l.uscs.symbol}</span>
+              </td>
+              <td style="padding:6px 4px;color:#e8f3f1;font-size:10.5px;">${l.uscs.name}</td>
+              <td style="padding:6px 4px;text-align:center;color:#ddd;">${l.fines ?? '--'}</td>
+              <td style="padding:6px 4px;text-align:center;color:#ddd;">${l.gravel ?? '--'}</td>
+              <td style="padding:6px 4px;text-align:center;color:#ddd;">${l.LL ?? '--'}</td>
+              <td style="padding:6px 4px;text-align:center;color:#ddd;">${l.PI ?? '--'}</td>
+              <td style="padding:6px 4px;text-align:center;font-weight:bold;">${nDisplay}</td>
+            </tr>`;
+        }
+        html += `</tbody></table></div>
+        <div style="font-size:9px;color:#555;margin-top:6px;">
+            %F=Fines &middot; %G=Gravel &middot; LL=Liquid Limit &middot; PI=Plasticity Index &middot; N=SPT &middot; R=Refusal (N&ge;50)
+        </div>`;
+        return html;
+    }
+
+    // fetchRoadRoute is defined below alongside the lab selector logic
+
+    // Central lab cost calculator -- per-layer, per-sample logic
+    // -- LAB COST ENGINE --
+    // soilProfile: array of depth-layer objects from buildSoilProfile
+    // depthFt:     total bore depth
+    // gwt:         groundwater table depth in ft (999 = not encountered)
+    // Returns { lab, chemical } cost PER BOREHOLE
     function calcLabCost(soilProfile, depthFt, gwt) {
+        // STEP 1: group consecutive layers with same USCS symbol into zones
         const zones = [];
         for (let i = 0; i < soilProfile.length; i++) {
             const l = soilProfile[i];
@@ -1854,6 +2250,8 @@
         let hasRock   = false;
 
         for (const zone of zones) {
+            // Zone thickness = number of 5ft layers in this zone
+            // <= 25ft (<=5 layers) -> 1 sample; > 25ft (>5 layers) -> 2 samples
             const zoneThicknessFt = zone.layers.length * 5;
             const samplesInZone   = zoneThicknessFt > 25 ? 2 : 1;
             for (let s = 0; s < samplesInZone; s++) {
@@ -1874,6 +2272,7 @@
                 const isClay    = finesVal >= 50;
                 const belowGWT  = sampleDepth > gwt;
 
+                // Always on every sample
                 labTotal += rates.sieve;
                 labTotal += rates.moisture;
                 labTotal += rates.specgrav;
@@ -1889,6 +2288,7 @@
             labTotal += rates.ucs_rock;
         }
 
+        // Chemical tests: only once for the whole project if bore depth > 50ft
         if (depthFt > 50) {
             chemTotal = rates.sulphate + rates.chloride;
         }
@@ -1919,7 +2319,7 @@
         const gwt        = siteData.gwt || 999;
         const sptTests   = Math.floor(soilDepthFt / 3);
         const sptCost    = sptTests * bhCount * rates.spt;
-        const drillCost  = (soilDepthFt * rates.drill + rockDepthFt * 5000) * bhCount;
+        const drillCost  = (soilDepthFt * rates.drill + rockDepthFt * 1700) * bhCount;
         const soilProfile = buildSoilProfile(siteData.lat, siteData.lng, depthFt);
         const labResult   = calcLabCost(soilProfile, depthFt, gwt);
         const labCost     = labResult.lab      * bhCount;
@@ -1951,7 +2351,7 @@
         const gwt        = siteData.gwt || 999;
         const sptTests   = Math.floor(soilDepthFt / 3);
         const sptCost    = sptTests * bhCount * rates.spt;
-        const drillCost  = (soilDepthFt * rates.drill + rockDepthFt * 5000) * bhCount;
+        const drillCost  = (soilDepthFt * rates.drill + rockDepthFt * 1700) * bhCount;
         const soilProfile = buildSoilProfile(siteData.lat, siteData.lng, depthFt);
         const labResult   = calcLabCost(soilProfile, depthFt, gwt);
         const labCost     = labResult.lab      * bhCount;
@@ -1998,6 +2398,8 @@
         const chemEl = document.getElementById('cost-chemical');
         if (chemEl) chemEl.innerText = Math.round(cc).toLocaleString();
 
+        // Compute an immediate mob + total using nearest lab straight-line distance
+        // (updateReportWithRoute will refine this once the road route is fetched)
         const nearestLab = findNearestLab(siteData.lat, siteData.lng);
         const straightDist = haversineKm(siteData.lat, siteData.lng, nearestLab.lat, nearestLab.lng);
         const initMob = straightDist <= 20 ? rates.mob20 : rates.mob30;
@@ -2028,174 +2430,125 @@
         btn.disabled = true;
 
         try {
-            const container = document.getElementById('export-report-container');
-            container.innerHTML = ''; 
+            // Populate export container with live report data
+            document.getElementById('exp-date').innerText    = "Date: " + new Date().toLocaleDateString();
+            document.getElementById('exp-name').innerText    = siteData.name;
+            document.getElementById('exp-coords').innerText  = `${siteData.lat.toFixed(5)}, ${siteData.lng.toFixed(5)}`;
+            document.getElementById('exp-dims').innerText    = `${siteData.len}ft x ${siteData.wid}ft`;
+            document.getElementById('exp-count').innerText   = document.getElementById('rep-bh-count').innerText;
+            document.getElementById('exp-depth').innerText   = document.getElementById('rep-depth').innerText;
+            document.getElementById('exp-total').innerText   = document.getElementById('cost-grand').innerText;
+            document.getElementById('exp-lab-name').innerText = selectedLabName || nearestLabName || 'N/A';
 
-            const makePage = () => {
-                const page = document.createElement('div');
-                page.className = 'pdf-page';
-                page.innerHTML = `<img src="d1d55df5-d117-4a76-a796-3f8ae1490674_removalai_preview.png" class="pdf-logo">`;
-                container.appendChild(page);
-                return page;
-            };
+            // Build print-friendly lab test list from sample summary
+            const summaryEl = document.getElementById('sample-summary-content');
+            if (summaryEl && summaryEl.innerHTML.trim() && !summaryEl.innerText.includes('Run a report')) {
+                // Convert the dark-themed summary HTML into a light, print-friendly table
+                const expTestList = document.getElementById('exp-test-list');
+                const zones = summaryEl.querySelectorAll('div[style*="margin-bottom:14px"]');
+                let tableHTML = '<table style="width:100%;border-collapse:collapse;font-size:11px;">';
+                tableHTML += '<thead><tr style="background:#0d6b49;color:#fff;">'
+                    + '<th style="padding:6px 8px;text-align:left;">Zone / Sample</th>'
+                    + '<th style="padding:6px 8px;text-align:left;">Depth (ft)</th>'
+                    + '<th style="padding:6px 8px;text-align:left;">Tests Required</th>'
+                    + '</tr></thead><tbody>';
 
-            const p1 = makePage();
-            
-            const layoutSrc = document.getElementById('layoutCanvas').toDataURL();
+                let rowIdx = 0;
+                zones.forEach(zone => {
+                    const zoneLabel = zone.querySelector('span') ? zone.querySelector('span').innerText : '';
+                    const samples = zone.querySelectorAll('div[style*="border:1px solid #105e4d"]');
+                    samples.forEach(sample => {
+                        const depthEl = sample.querySelector('div[style*="color:#e67e22"]');
+                        const depth = depthEl ? depthEl.innerText : '';
+                        const testEls = sample.querySelectorAll('div[style*="border-bottom:1px dotted"] span:first-child');
+                        const tests = Array.from(testEls).map(t => t.innerText).join(', ');
+                        const bg = rowIdx % 2 === 0 ? '#fff' : '#f5f5f5';
+                        tableHTML += `<tr style="background:${bg};border-bottom:1px solid #ddd;">`
+                            + `<td style="padding:5px 8px;color:#555;">${zoneLabel}</td>`
+                            + `<td style="padding:5px 8px;font-weight:600;">${depth}</td>`
+                            + `<td style="padding:5px 8px;">${tests}</td>`
+                            + '</tr>';
+                        rowIdx++;
+                    });
+                });
+
+                // Chemical tests block if present
+                const chemBlock = summaryEl.querySelector('div[style*="rgba(230,126,34"]');
+                if (chemBlock) {
+                    const chemTests = Array.from(chemBlock.querySelectorAll('span[style*="color:#a8c7c1"]'))
+                        .map(t => t.innerText).join(', ');
+                    const bg = rowIdx % 2 === 0 ? '#fff' : '#f5f5f5';
+                    tableHTML += `<tr style="background:#fff8f0;border-bottom:1px solid #ddd;">`
+                        + `<td style="padding:5px 8px;color:#e67e22;font-weight:600;" colspan="2">Chemical Tests (1× project)</td>`
+                        + `<td style="padding:5px 8px;">${chemTests}</td>`
+                        + '</tr>';
+                }
+
+                tableHTML += '</tbody></table>';
+                expTestList.innerHTML = tableHTML;
+            } else {
+                document.getElementById('exp-test-list').innerHTML =
+                    '<p style="color:#999;font-size:11px;">No sample data available.</p>';
+            }
+
             const chemCostEl = document.getElementById('cost-chemical');
             const chemRow    = document.getElementById('row-chemical');
             const chemLine   = chemRow && chemRow.style.display !== 'none'
                 ? `<div class="exp-data-row"><span>Chemical Tests (1× project):</span> <b>PKR ${chemCostEl ? chemCostEl.innerText : '0'}</b></div>`
                 : '';
+            document.getElementById('exp-costs').innerHTML =
+                `<div class="exp-data-row"><span>Drilling (${siteData.drillType}):</span> <b>PKR ${document.getElementById('cost-drill').innerText}</b></div>
+                 <div class="exp-data-row"><span>SPT Testing:</span> <b>PKR ${document.getElementById('cost-spt').innerText}</b></div>
+                 <div class="exp-data-row"><span>Lab Tests:</span> <b>PKR ${document.getElementById('cost-lab').innerText}</b></div>
+                 ${chemLine}
+                 <div class="exp-data-row"><span>Report Fee:</span> <b>PKR ${document.getElementById('cost-report-fee').innerText}</b></div>
+                 <div class="exp-data-row"><span>Mobilization (${document.getElementById('rep-route-dist').innerText}):</span> <b>PKR ${document.getElementById('cost-mob').innerText}</b></div>`;
 
-            p1.innerHTML += `
-                <div class="exp-header">
-                    <div style="display:flex; align-items:center; gap:15px;">
-                        <img src="https://nust.edu.pk/wp-content/uploads/2020/03/NUST-Logo.png" height="70" crossorigin="anonymous">
-                        <div style="line-height:1.2">
-                            <div style="font-size:22px; font-weight:800; color:#0d6b49">GEOTECHNICAL INVESTIGATION REPORT</div>
-                            <div style="font-size:14px; color:#666">NUST Institute of Civil Engineering (NICE)</div>
-                        </div>
-                    </div>
-                    <div style="font-size:12px; color:#999; font-weight:600; margin-right: 140px;">Date: ${new Date().toLocaleDateString()}</div>
-                </div>
-                
-                <div class="exp-grid">
-                    <div class="exp-section">
-                        <div class="exp-sec-title">Site Information</div>
-                        <div class="exp-data-row"><span>Project Name:</span> <b>${siteData.name}</b></div>
-                        <div class="exp-data-row"><span>Coordinates:</span> <b>${siteData.lat.toFixed(5)}, ${siteData.lng.toFixed(5)}</b></div>
-                        <div class="exp-data-row"><span>Dimensions:</span> <b>${siteData.len}ft x ${siteData.wid}ft</b></div>
-                    </div>
-                    <div class="exp-section">
-                        <div class="exp-sec-title">Technical Specs</div>
-                        <div class="exp-data-row"><span>Borehole Count:</span> <b>${document.getElementById('rep-bh-count').innerText}</b></div>
-                        <div class="exp-data-row"><span>Depth per Bore:</span> <b>${document.getElementById('rep-depth').innerText}</b></div>
-                    </div>
-                </div>
+            // Borehole layout diagram from canvas
+            document.getElementById('exp-diagram-img').src = document.getElementById('layoutCanvas').toDataURL();
 
-                <div class="exp-section">
-                    <div class="exp-sec-title">Borehole Layout Plan</div>
-                    <div style="text-align:center; padding:10px 0;">
-                        <img src="${layoutSrc}" style="width:100%; max-height:260px; object-fit:contain; border:1px solid #ddd; border-radius:6px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
-                    </div>
-                </div>
+            // Brief delay to let the DOM settle, then capture and download as PDF
+            await new Promise(r => setTimeout(r, 300));
+            const reportCanvas = await html2canvas(document.getElementById('export-report-container'), {
+                scale: 2,
+                useCORS: true,
+                allowTaint: false,
+                logging: false,
+                backgroundColor: '#ffffff'
+            });
 
-                <div class="exp-section" style="background:#f9f9f9; border-color:#d5e8e4;">
-                    <div class="exp-sec-title" style="color:#105e4d; border-color:#d5e8e4;">Cost Estimation (PKR)</div>
-                    <div class="exp-data-row"><span>Drilling (${siteData.drillType}):</span> <b>PKR ${document.getElementById('cost-drill').innerText}</b></div>
-                    <div class="exp-data-row"><span>SPT Testing:</span> <b>PKR ${document.getElementById('cost-spt').innerText}</b></div>
-                    <div class="exp-data-row"><span>Lab Tests:</span> <b>PKR ${document.getElementById('cost-lab').innerText}</b></div>
-                    ${chemLine}
-                    <div class="exp-data-row"><span>Report Fee:</span> <b>PKR ${document.getElementById('cost-report-fee').innerText}</b></div>
-                    <div class="exp-data-row"><span>Mobilization (${document.getElementById('rep-route-dist').innerText}):</span> <b>PKR ${document.getElementById('cost-mob').innerText}</b></div>
-                    <div style="font-size:22px; font-weight:800; text-align:right; color:#e67e22; margin-top:15px; border-top:2px solid #ccc; padding-top:12px;">
-                        ${document.getElementById('cost-grand').innerText}
-                    </div>
-                </div>
-            `;
-
-            const summaryEl = document.getElementById('sample-summary-content');
-            
-            const createTablePage = () => {
-                const pt = makePage();
-                pt.innerHTML += `
-                    <div class="exp-header" style="margin-bottom: 20px;">
-                        <div style="line-height:1.2">
-                            <div style="font-size:20px; font-weight:800; color:#0d6b49">LABORATORY TESTING PROGRAM</div>
-                            <div style="font-size:14px; color:#666; font-weight:bold;">Assigned Lab: <span style="color:#0d6b49;">${selectedLabName || nearestLabName || 'N/A'}</span></div>
-                        </div>
-                        <div style="margin-right:140px; color:#999; font-size:12px; font-weight:bold;">Project: ${siteData.name}</div>
-                    </div>
-                    <table class="exp-table">
-                        <thead>
-                            <tr>
-                                <th>Zone / Sample</th>
-                                <th>Depth (ft)</th>
-                                <th>Tests Required</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                `;
-                return pt;
-            };
-
-            let currentTablePage = null;
-            let tbody = null;
-            let rowsOnPage = 0;
-            const MAX_ROWS = 22;
-
-            if (summaryEl && summaryEl.innerHTML.trim() && !summaryEl.innerText.includes('Run a report')) {
-                const zones = summaryEl.querySelectorAll('div[style*="margin-bottom:14px"]');
-                let rowIdx = 0;
-                
-                zones.forEach(zone => {
-                    const zoneLabel = zone.querySelector('span') ? zone.querySelector('span').innerText : '';
-                    const samples = zone.querySelectorAll('div[style*="border:1px solid #105e4d"]');
-                    
-                    samples.forEach(sample => {
-                        if (!currentTablePage || rowsOnPage >= MAX_ROWS) {
-                            currentTablePage = createTablePage();
-                            tbody = currentTablePage.querySelector('tbody');
-                            rowsOnPage = 0;
-                        }
-
-                        const depthEl = sample.querySelector('div[style*="color:#e67e22"]');
-                        const depth = depthEl ? depthEl.innerText : '';
-                        const testEls = sample.querySelectorAll('div[style*="border-bottom:1px dotted"] span:first-child');
-                        const tests = Array.from(testEls).map(t => t.innerText).join(', ');
-                        
-                        const bg = rowIdx % 2 === 0 ? '#fff' : '#fcfcfc';
-                        tbody.innerHTML += `<tr style="background:${bg};">
-                            <td style="color:#555; font-weight:600;">${zoneLabel}</td>
-                            <td style="font-weight:700; color:#e67e22;">${depth}</td>
-                            <td style="color:#333;">${tests}</td>
-                        </tr>`;
-                        
-                        rowIdx++;
-                        rowsOnPage++;
-                    });
-                });
-
-                const chemBlock = summaryEl.querySelector('div[style*="rgba(230,126,34"]');
-                if (chemBlock) {
-                    if (!currentTablePage || rowsOnPage >= MAX_ROWS) {
-                        currentTablePage = createTablePage();
-                        tbody = currentTablePage.querySelector('tbody');
-                        rowsOnPage = 0;
-                    }
-                    const chemTests = Array.from(chemBlock.querySelectorAll('span[style*="color:#a8c7c1"]'))
-                        .map(t => t.innerText).join(', ');
-                    tbody.innerHTML += `<tr style="background:#fff8f0; border-top:2px solid #f0e6dc;">
-                        <td style="color:#e67e22; font-weight:800;" colspan="2">Chemical Tests (1× project)</td>
-                        <td style="font-weight:600; color:#d35400;">${chemTests}</td>
-                    </tr>`;
-                }
-            } else {
-                currentTablePage = createTablePage();
-                currentTablePage.querySelector('tbody').innerHTML = '<tr><td colspan="3" style="text-align:center; color:#999;">No sample data available.</td></tr>';
-            }
-
-            await new Promise(r => setTimeout(r, 400));
-            
-            const pages = document.querySelectorAll('.pdf-page');
+            const imgData = reportCanvas.toDataURL('image/png');
             const { jsPDF } = window.jspdf;
-            const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-            const pageW = 210, pageH = 297;
 
-            for (let i = 0; i < pages.length; i++) {
-                const pageCanvas = await html2canvas(pages[i], {
-                    scale: 2,
-                    useCORS: true,
-                    allowTaint: false,
-                    logging: false,
-                    backgroundColor: '#ffffff'
-                });
-                
-                const imgData = pageCanvas.toDataURL('image/png');
-                if (i > 0) pdf.addPage();
-                pdf.addImage(imgData, 'PNG', 0, 0, pageW, pageH);
+            // A4 dimensions in mm
+            const pageW = 210, pageH = 297;
+            const imgW = pageW;
+            const imgH = (reportCanvas.height / reportCanvas.width) * imgW;
+
+            // If content is taller than one A4 page, split across multiple pages
+            const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+            let yOffset = 0;
+            let remainingH = imgH;
+
+            while (remainingH > 0) {
+                const sliceH = Math.min(remainingH, pageH);
+                const srcY = yOffset / imgH * reportCanvas.height;
+                const srcH = sliceH / imgH * reportCanvas.height;
+
+                // Draw the slice of the captured image onto the page
+                const sliceCanvas = document.createElement('canvas');
+                sliceCanvas.width = reportCanvas.width;
+                sliceCanvas.height = srcH;
+                sliceCanvas.getContext('2d').drawImage(
+                    reportCanvas, 0, srcY, reportCanvas.width, srcH,
+                    0, 0, reportCanvas.width, srcH
+                );
+                const sliceData = sliceCanvas.toDataURL('image/png');
+                if (yOffset > 0) pdf.addPage();
+                pdf.addImage(sliceData, 'PNG', 0, 0, pageW, sliceH);
+
+                yOffset += sliceH;
+                remainingH -= sliceH;
             }
 
             pdf.save(`GeoSightReport_${siteData.name.replace(/\s+/g, '_')}.pdf`);
@@ -2213,8 +2566,12 @@
     function loadFromHistory(index) { isRecalling = true; const hList = JSON.parse(sessionStorage.getItem('geoSessionHistory') || '[]'); siteData = hList[index]; generateReport(); toggleHistory(false); }
     function toggleHistory(o) { document.getElementById('history-drawer').style.right = o ? "0px" : "-420px"; if(o) renderHistoryUI(); }
     
+    // -- SAMPLE COUNT SUMMARY RENDERER --
+    // Mirrors the zone-based logic in calcLabCost to count samples per zone/layer
     function renderSampleSummary(soilProfile, depthFt) {
         const gwt = 999;
+
+        // Build zones (same as calcLabCost)
         const zones = [];
         for (let i = 0; i < soilProfile.length; i++) {
             const l = soilProfile[i];
